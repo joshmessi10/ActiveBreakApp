@@ -8,9 +8,11 @@ Aplicación de Pausas Activas con Detección de Postura en Tiempo Real
 - ✅ **Visualización de Skeleton**: Overlay profesional con 17 puntos clave
 - ✅ **Análisis Automático**: Clasificación de postura correcta/incorrecta
 - ✅ **Notificaciones de Escritorio**: Alertas nativas con sonido después de 3 segundos de mala postura
+- ✅ **Seguimiento de Estadísticas**: Tracking automático de tiempo en cada postura (localStorage)
+- ✅ **Dashboard Interactivo**: Visualización de datos en formato mm:ss
 - ✅ **Interfaz Moderna**: UI oscura con feedback visual en tiempo real
-- 🚧 **Estadísticas** (próximamente): Seguimiento histórico de postura
 - 🚧 **Recordatorios de Pausas** (próximamente): Sistema de break timers
+- 🚧 **Exportar Datos** (próximamente): Descarga histórico en CSV/JSON
 
 ## 🚀 Instalación
 
@@ -44,8 +46,8 @@ La aplicación cargará automáticamente:
 
 ## 📊 Estado del Proyecto
 
-**Versión**: 3.0  
-**Estado**: Core AI + Desktop Notifications Complete! 🚀
+**Versión**: 4.0  
+**Estado**: Core Features Complete! 🎉 (AI + Notifications + Data Tracking)
 
 Ver `project-purpose.md` para más detalles técnicos.
 
@@ -61,14 +63,25 @@ Ver `project-purpose.md` para más detalles técnicos.
    - 🔔 Notificación nativa del sistema operativo
    - 🔊 Sonido de alerta
    - ♻️ Se resetea automáticamente al corregir la postura
+6. **Tracking Automático**: Cada segundo se registra:
+   - ⏱️ Tiempo en postura correcta
+   - ⏱️ Tiempo en postura incorrecta
+   - 💾 Datos guardados en localStorage (persisten al reiniciar)
+7. **Estadísticas**: Ve tu progreso en la pestaña "Estadísticas":
+   - 📊 Tiempo total en cada postura (formato mm:ss)
+   - 📈 Porcentajes y totales en consola
 
 ## 📝 Próximas Mejoras
 
 - [x] ✅ Notificaciones de escritorio con sonido
 - [x] ✅ Sistema de threshold (3 segundos)
 - [x] ✅ IPC seguro con contextBridge
-- [ ] Almacenamiento de estadísticas (localStorage/SQLite)
+- [x] ✅ Almacenamiento de estadísticas (localStorage)
+- [x] ✅ Tracking automático de tiempo por postura
+- [x] ✅ Dashboard de estadísticas en tiempo real
+- [ ] Registro de eventos con timestamps (historial detallado)
 - [ ] Análisis avanzado de postura (ángulos de columna)
 - [ ] Recordatorios de pausas activas programables
-- [ ] Exportar datos históricos
+- [ ] Exportar datos históricos (CSV/JSON)
 - [ ] Configuración de sensibilidad funcional
+- [ ] Gráficos de progreso diario/semanal

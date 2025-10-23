@@ -72,6 +72,9 @@ async function initPoseDetection() {
 
     // 4. Start the detection loop
     detectPose();
+
+    // 5. Start data collection interval (every 1 second)
+    startDataCollection();
   } catch (err) {
     statusText.textContent = "Error al cargar el modelo ❌";
     console.error("Error initializing pose detection:", err);
@@ -234,6 +237,36 @@ function drawPose(pose) {
       ctx.fill();
     }
   });
+}
+
+// 📊 H. Data Collection - Track time in each posture state
+function startDataCollection() {
+  console.log("📊 Data collection started - tracking posture time");
+
+  setInterval(() => {
+    // Check current posture state
+    const isPostureBad = badPostureStartTime !== null;
+
+    if (isPostureBad) {
+      // Increment incorrect posture time
+      let incorrectSeconds = parseInt(
+        localStorage.getItem("incorrectSeconds") || "0",
+        10
+      );
+      incorrectSeconds++;
+      localStorage.setItem("incorrectSeconds", incorrectSeconds.toString());
+    } else {
+      // Increment correct posture time (only if detector is active)
+      if (detector) {
+        let correctSeconds = parseInt(
+          localStorage.getItem("correctSeconds") || "0",
+          10
+        );
+        correctSeconds++;
+        localStorage.setItem("correctSeconds", correctSeconds.toString());
+      }
+    }
+  }, 1000); // Run every 1 second
 }
 
 startCamera();

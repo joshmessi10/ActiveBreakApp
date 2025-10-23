@@ -16,19 +16,19 @@
     </header>
 
     <main class="stats-page">
-      <h2>Resumen de Posturas Detectadas</h2>
+      <h2>Tiempo Total en Cada Postura</h2>
       <div class="stats-container">
         <div class="stat-card correct">
-          <h3>Posturas Correctas</h3>
-          <p id="correctCount">128</p>
+          <h3>Tiempo con Postura Correcta</h3>
+          <p id="correctTime">00:00</p>
         </div>
         <div class="stat-card incorrect">
-          <h3>Posturas Incorrectas</h3>
-          <p id="incorrectCount">42</p>
+          <h3>Tiempo con Postura Incorrecta</h3>
+          <p id="incorrectTime">00:00</p>
         </div>
       </div>
 
-      <table class="history">
+      <!-- <table class="history">
         <thead>
           <tr>
             <th>Fecha</th>
@@ -37,27 +37,13 @@
           </tr>
         </thead>
         <tbody id="historyTable"></tbody>
-      </table>
+      </table> -->
     </main>
 
     <footer>
       <p>© 2025 Active Break</p>
     </footer>
 
-    <script>
-      const table = document.getElementById("historyTable");
-      const samples = [
-        { date: "2025-10-21", time: "09:00", type: "Correcta" },
-        { date: "2025-10-21", time: "09:10", type: "Incorrecta" },
-        { date: "2025-10-21", time: "09:20", type: "Correcta" },
-        { date: "2025-10-21", time: "09:40", type: "Correcta" },
-        { date: "2025-10-21", time: "10:00", type: "Incorrecta" },
-      ];
-      samples.forEach((s) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${s.date}</td><td>${s.time}</td><td>${s.type}</td>`;
-        table.appendChild(row);
-      });
-    </script>
+    <script src="stats.js" type="module" defer></script>
   </body>
 </html>
