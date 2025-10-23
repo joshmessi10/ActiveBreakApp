@@ -1,4 +1,4 @@
 // preload.js
-window.addEventListener('DOMContentLoaded', () => {
-  console.log('Frontend cargado correctamente');
+window.addEventListener("DOMContentLoaded", () => {
+  console.log("Frontend cargado correctamente");
 });

@@ -1,0 +1,30 @@
+{
+  "name": "activebreakapp",
+  "version": "1.0.0",
+  "description": "Aplicación de Pausas Activas",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshmessi10/ActiveBreakApp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/joshmessi10/ActiveBreakApp/issues"
+  },
+  "homepage": "https://github.com/joshmessi10/ActiveBreakApp#readme",
+  "devDependencies": {
+    "electron": "^38.4.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "@mediapipe/pose": "^0.5.1675469404",
+    "@tensorflow/tfjs": "^4.22.0"
+  }
+}
