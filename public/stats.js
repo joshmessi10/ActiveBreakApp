@@ -55,4 +55,73 @@ window.addEventListener("DOMContentLoaded", () => {
       `📊 Correct: ${correctPercentage}% | Incorrect: ${incorrectPercentage}%`
     );
   }
+
+  // 📝 Load and display posture event history
+  loadPostureHistory();
 });
+
+// 📝 Load posture event history into table
+function loadPostureHistory() {
+  console.log("📝 Loading posture event history...");
+
+  // 1. Get the history table tbody element
+  const historyTable = document.getElementById("historyTable");
+
+  if (!historyTable) {
+    console.warn("History table element not found");
+    return;
+  }
+
+  // 2. Read posture history from localStorage
+  const historyJSON = localStorage.getItem("postureHistory");
+  const history = historyJSON ? JSON.parse(historyJSON) : [];
+
+  // 3. Clear the table
+  historyTable.innerHTML = "";
+
+  // 4. Check if there's any history
+  if (history.length === 0) {
+    const emptyRow = document.createElement("tr");
+    emptyRow.innerHTML = `
+      <td colspan="3" style="text-align: center; color: #888;">
+        No hay eventos registrados aún. Comienza a usar la aplicación para ver tu historial.
+      </td>
+    `;
+    historyTable.appendChild(emptyRow);
+    console.log("📝 No history events found");
+    return;
+  }
+
+  // 5. Loop through events (already sorted, newest first) and create rows
+  history.forEach((event) => {
+    const date = new Date(event.timestamp);
+
+    // Format date (YYYY-MM-DD)
+    const dateStr = date.toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+
+    // Format time (HH:MM:SS)
+    const timeStr = date.toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+
+    // Create table row
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${dateStr}</td>
+      <td>${timeStr}</td>
+      <td style="color: ${event.type === "Correcta" ? "#2ea043" : "#f85149"}">
+        ${event.type}
+      </td>
+    `;
+
+    historyTable.appendChild(row);
+  });
+
+  console.log(`📝 Loaded ${history.length} history events`);
+}

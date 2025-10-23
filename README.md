@@ -7,11 +7,13 @@ Aplicación de Pausas Activas con Detección de Postura en Tiempo Real
 - ✅ **Detección de Postura en Tiempo Real**: Usando MoveNet (TensorFlow.js)
 - ✅ **Visualización de Skeleton**: Overlay profesional con 17 puntos clave
 - ✅ **Análisis Automático**: Clasificación de postura correcta/incorrecta
-- ✅ **Notificaciones de Escritorio**: Alertas nativas con sonido después de 3 segundos de mala postura
-- ✅ **Seguimiento de Estadísticas**: Tracking automático de tiempo en cada postura (localStorage)
-- ✅ **Dashboard Interactivo**: Visualización de datos en formato mm:ss
+- ✅ **Notificaciones Configurables**: Alertas nativas con sonido (umbral ajustable 1-60s)
+- ✅ **Recordatorios de Pausas**: Sistema automático cada N minutos (5-120 min)
+- ✅ **Seguimiento de Estadísticas**: Tracking automático de tiempo en cada postura
+- ✅ **Historial Completo**: Registro de eventos con fecha y hora (últimos 100 cambios)
+- ✅ **Dashboard Interactivo**: Visualización de datos y tabla de historial
+- ✅ **Sistema de Configuración**: Sensibilidad, notificaciones, umbrales personalizables
 - ✅ **Interfaz Moderna**: UI oscura con feedback visual en tiempo real
-- 🚧 **Recordatorios de Pausas** (próximamente): Sistema de break timers
 - 🚧 **Exportar Datos** (próximamente): Descarga histórico en CSV/JSON
 
 ## 🚀 Instalación
@@ -46,8 +48,8 @@ La aplicación cargará automáticamente:
 
 ## 📊 Estado del Proyecto
 
-**Versión**: 4.0  
-**Estado**: Core Features Complete! 🎉 (AI + Notifications + Data Tracking)
+**Versión**: 6.0  
+**Estado**: Production Ready! 🎉 (AI + Notifications + Data + Settings + History)
 
 Ver `project-purpose.md` para más detalles técnicos.
 
@@ -70,18 +72,36 @@ Ver `project-purpose.md` para más detalles técnicos.
 7. **Estadísticas**: Ve tu progreso en la pestaña "Estadísticas":
    - 📊 Tiempo total en cada postura (formato mm:ss)
    - 📈 Porcentajes y totales en consola
+   - 📝 Historial completo de eventos con fecha/hora
+   - 🎨 Eventos coloreados (verde/rojo) según tipo
+   - ⏱️ Últimos 100 cambios de postura registrados
+8. **Recordatorios de Descanso**: Automáticamente cada N minutos:
+   - ⏰ Notificación recordando tomar un descanso
+   - ⚙️ Configurable en "Configuración" (5-120 minutos)
+   - 🔕 Se puede desactivar con el toggle de notificaciones
+9. **Configuración Personalizable**: Ajusta todo en "Configuración":
+   - 🎚️ Sensibilidad del detector (1-10)
+   - 🔔 Activar/desactivar notificaciones
+   - ⏱️ Umbral de alerta de postura (1-60 segundos)
+   - ⏰ Intervalo de descansos (5-120 minutos)
+   - 💾 Todas las configuraciones persisten al reiniciar
 
 ## 📝 Próximas Mejoras
 
 - [x] ✅ Notificaciones de escritorio con sonido
-- [x] ✅ Sistema de threshold (3 segundos)
+- [x] ✅ Sistema de threshold configurable
 - [x] ✅ IPC seguro con contextBridge
 - [x] ✅ Almacenamiento de estadísticas (localStorage)
 - [x] ✅ Tracking automático de tiempo por postura
 - [x] ✅ Dashboard de estadísticas en tiempo real
-- [ ] Registro de eventos con timestamps (historial detallado)
+- [x] ✅ Recordatorios de pausas activas programables
+- [x] ✅ Sistema de configuración funcional con persistencia
+- [x] ✅ Sensibilidad ajustable del detector
+- [x] ✅ Registro de eventos con timestamps (historial detallado)
+- [x] ✅ Tabla interactiva de historial con colores
 - [ ] Análisis avanzado de postura (ángulos de columna)
-- [ ] Recordatorios de pausas activas programables
 - [ ] Exportar datos históricos (CSV/JSON)
-- [ ] Configuración de sensibilidad funcional
+- [ ] Filtrado de historial por fecha/rango
 - [ ] Gráficos de progreso diario/semanal
+- [ ] Sugerencias de ejercicios de estiramiento
+- [ ] Análisis de sesiones (inicio/fin/duración)

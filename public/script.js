@@ -25,6 +25,12 @@ let running = false;
 let badPostureStartTime = null;
 let notificationSent = false;
 
+// ⏰ Break Timer Globals
+let lastBreakNotificationTime = 0;
+
+// 📝 Event Logging Globals
+let lastPostureState = "correct"; // Track previous state to detect changes
+
 // 🕒 Formatea tiempo tipo mm:ss
 function formatTime(s) {
   const m = Math.floor(s / 60)
@@ -75,6 +81,9 @@ async function initPoseDetection() {
 
     // 5. Start data collection interval (every 1 second)
     startDataCollection();
+
+    // 6. Start session timer for break reminders
+    startTimer();
   } catch (err) {
     statusText.textContent = "Error al cargar el modelo ❌";
     console.error("Error initializing pose detection:", err);
@@ -117,9 +126,21 @@ function classifyPose(pose) {
     (kp) => kp.name === "right_shoulder"
   );
 
+  // ⚙️ Load sensitivity setting (1-10, default: 5)
+  // Map sensitivity: 1 (strict, 0.46) to 10 (lenient, 0.06)
+  const sensitivitySetting = parseInt(
+    localStorage.getItem("settings_sensitivity") || "5",
+    10
+  );
+  const confidenceThreshold = 0.5 - sensitivitySetting * 0.04;
+
   // Check if all keypoints are detected with sufficient confidence
   if (!nose || !leftShoulder || !rightShoulder) return;
-  if (nose.score < 0.3 || leftShoulder.score < 0.3 || rightShoulder.score < 0.3)
+  if (
+    nose.score < confidenceThreshold ||
+    leftShoulder.score < confidenceThreshold ||
+    rightShoulder.score < confidenceThreshold
+  )
     return;
 
   // Simple rule: nose should be horizontally between shoulders for good posture
@@ -132,6 +153,13 @@ function classifyPose(pose) {
 
   // Check if nose is centered between shoulders
   const isCentered = noseX >= minX && noseX <= maxX;
+  const currentState = isCentered ? "correct" : "incorrect";
+
+  // 📝 Log state changes
+  if (currentState !== lastPostureState) {
+    logPostureEvent(currentState);
+    lastPostureState = currentState;
+  }
 
   if (isCentered) {
     // ✅ Good posture - Reset alert state
@@ -155,32 +183,46 @@ function classifyPose(pose) {
       console.log("⚠️ Bad posture detected - starting timer");
     }
 
-    // Check if bad posture has lasted 3+ seconds
+    // ⚙️ Load alert threshold setting (default: 3 seconds)
+    const alertThreshold = parseInt(
+      localStorage.getItem("settings_alertThreshold") || "3",
+      10
+    );
+    const alertThresholdMs = alertThreshold * 1000;
+
+    // Check if bad posture has lasted longer than threshold
     const badPostureDuration = Date.now() - badPostureStartTime;
 
-    if (badPostureDuration > 3000 && !notificationSent) {
+    if (badPostureDuration > alertThresholdMs && !notificationSent) {
       console.log(
         `🔔 Bad posture for ${Math.round(
           badPostureDuration / 1000
         )}s - triggering notification`
       );
 
-      // Send notification via IPC
-      if (window.api && window.api.sendNotification) {
+      // ⚙️ Check if notifications are enabled (default: true)
+      const notificationsEnabled =
+        localStorage.getItem("settings_notifications") !== "false";
+
+      // Send notification via IPC (only if enabled)
+      if (notificationsEnabled && window.api && window.api.sendNotification) {
         console.log("✅ window.api.sendNotification is available");
         window.api.sendNotification(
-          "¡Corrige tu postura! Has estado en mala posición por más de 3 segundos."
+          `¡Corrige tu postura! Has estado en mala posición por más de ${alertThreshold} segundos.`
         );
         notificationSent = true;
         console.log("📨 Notification sent via IPC");
+      } else if (!notificationsEnabled) {
+        console.log("🔕 Notifications disabled in settings");
+        notificationSent = true; // Prevent repeated checks
       } else {
         console.error("❌ IPC API not available - window.api:", window.api);
       }
-    } else if (badPostureDuration <= 3000) {
+    } else if (badPostureDuration <= alertThresholdMs) {
       console.log(
         `⏱️ Bad posture for ${Math.round(
           badPostureDuration / 1000
-        )}s (waiting for 3s threshold)`
+        )}s (waiting for ${alertThreshold}s threshold)`
       );
     }
   }
@@ -239,7 +281,41 @@ function drawPose(pose) {
   });
 }
 
-// 📊 H. Data Collection - Track time in each posture state
+// � I. Event Logging - Log posture state changes
+function logPostureEvent(state) {
+  try {
+    // 1. Read existing events from localStorage
+    const historyJSON = localStorage.getItem("postureHistory");
+    let history = historyJSON ? JSON.parse(historyJSON) : [];
+
+    // 2. Create new event object
+    const event = {
+      timestamp: Date.now(),
+      type: state === "correct" ? "Correcta" : "Incorrecta",
+    };
+
+    // 3. Add to beginning of array (newest first)
+    history.unshift(event);
+
+    // 4. Cap at 100 events (remove oldest if needed)
+    if (history.length > 100) {
+      history.pop();
+    }
+
+    // 5. Save back to localStorage
+    localStorage.setItem("postureHistory", JSON.stringify(history));
+
+    console.log(
+      `📝 Event logged: ${event.type} at ${new Date(
+        event.timestamp
+      ).toLocaleTimeString()}`
+    );
+  } catch (err) {
+    console.error("Error logging posture event:", err);
+  }
+}
+
+// �📊 H. Data Collection - Track time in each posture state
 function startDataCollection() {
   console.log("📊 Data collection started - tracking posture time");
 
@@ -266,6 +342,39 @@ function startDataCollection() {
         localStorage.setItem("correctSeconds", correctSeconds.toString());
       }
     }
+
+    // ⏰ Break Timer - Send reminder at configured intervals
+    // Get current session time
+    const elapsedSeconds = seconds;
+
+    // ⚙️ Load break interval setting (default: 30 minutes)
+    const breakIntervalMinutes = parseInt(
+      localStorage.getItem("settings_breakInterval") || "30",
+      10
+    );
+    const breakIntervalSeconds = breakIntervalMinutes * 60;
+
+    // Check if it's time for a break (and session has started)
+    // Only trigger once per interval using lastBreakNotificationTime
+    if (
+      elapsedSeconds > 0 &&
+      elapsedSeconds % breakIntervalSeconds === 0 &&
+      elapsedSeconds !== lastBreakNotificationTime &&
+      window.api &&
+      window.api.sendNotification
+    ) {
+      // ⚙️ Check if notifications are enabled
+      const notificationsEnabled =
+        localStorage.getItem("settings_notifications") !== "false";
+
+      if (notificationsEnabled) {
+        console.log(`⏰ Break time! (${breakIntervalMinutes} minutes elapsed)`);
+        window.api.sendNotification(
+          "¡Hora de descansar! Tómate un breve descanso y estírate."
+        );
+        lastBreakNotificationTime = elapsedSeconds; // Mark this interval as notified
+      }
+    }
   }, 1000); // Run every 1 second
 }
 
@@ -277,8 +386,12 @@ function startTimer() {
   stopTimer();
   timerInterval = setInterval(() => {
     seconds++;
-    sessionTime.textContent = formatTime(seconds);
+    // Only update UI if element exists
+    if (sessionTime) {
+      sessionTime.textContent = formatTime(seconds);
+    }
   }, 1000);
+  console.log("⏱️ Session timer started");
 }
 
 function stopTimer() {
