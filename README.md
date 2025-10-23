@@ -7,9 +7,10 @@ Aplicación de Pausas Activas con Detección de Postura en Tiempo Real
 - ✅ **Detección de Postura en Tiempo Real**: Usando MoveNet (TensorFlow.js)
 - ✅ **Visualización de Skeleton**: Overlay profesional con 17 puntos clave
 - ✅ **Análisis Automático**: Clasificación de postura correcta/incorrecta
+- ✅ **Notificaciones de Escritorio**: Alertas nativas con sonido después de 3 segundos de mala postura
 - ✅ **Interfaz Moderna**: UI oscura con feedback visual en tiempo real
 - 🚧 **Estadísticas** (próximamente): Seguimiento histórico de postura
-- 🚧 **Notificaciones** (próximamente): Alertas de escritorio para mala postura
+- 🚧 **Recordatorios de Pausas** (próximamente): Sistema de break timers
 
 ## 🚀 Instalación
 
@@ -43,8 +44,8 @@ La aplicación cargará automáticamente:
 
 ## 📊 Estado del Proyecto
 
-**Versión**: 2.0  
-**Estado**: Core AI Implementation Complete ✅
+**Versión**: 3.0  
+**Estado**: Core AI + Desktop Notifications Complete! 🚀
 
 Ver `project-purpose.md` para más detalles técnicos.
 
@@ -53,14 +54,21 @@ Ver `project-purpose.md` para más detalles técnicos.
 1. **Detección**: El modelo MoveNet analiza cada frame del video en tiempo real
 2. **Keypoints**: Identifica 17 puntos clave del cuerpo humano
 3. **Análisis**: Verifica si la nariz está alineada entre los hombros
-4. **Feedback**: Muestra estado en tiempo real:
+4. **Feedback Visual**: Muestra estado en tiempo real:
    - ✅ Verde: Postura Correcta
    - ⚠️ Rojo: Postura Incorrecta
+5. **Notificaciones**: Si mantienes mala postura por 3+ segundos:
+   - 🔔 Notificación nativa del sistema operativo
+   - 🔊 Sonido de alerta
+   - ♻️ Se resetea automáticamente al corregir la postura
 
 ## 📝 Próximas Mejoras
 
-- [ ] Notificaciones de escritorio
-- [ ] Almacenamiento de estadísticas
+- [x] ✅ Notificaciones de escritorio con sonido
+- [x] ✅ Sistema de threshold (3 segundos)
+- [x] ✅ IPC seguro con contextBridge
+- [ ] Almacenamiento de estadísticas (localStorage/SQLite)
 - [ ] Análisis avanzado de postura (ángulos de columna)
-- [ ] Recordatorios de pausas activas
+- [ ] Recordatorios de pausas activas programables
 - [ ] Exportar datos históricos
+- [ ] Configuración de sensibilidad funcional
