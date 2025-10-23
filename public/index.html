@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <title>Active Break - Detección de Postura</title>
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
     <!-- TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
@@ -12,11 +19,17 @@
   </head>
   <body>
     <header>
-      <h1>💪 Active Break</h1>
+      <h1><i data-feather="activity"></i> Active Break</h1>
       <nav>
-        <a href="index.html" class="active">Inicio</a>
-        <a href="stats.html">Estadísticas</a>
-        <a href="settings.html">Configuración</a>
+        <a href="index.html" class="active" title="Inicio">
+          <i data-feather="home"></i>
+        </a>
+        <a href="stats.html" title="Estadísticas">
+          <i data-feather="bar-chart-2"></i>
+        </a>
+        <a href="settings.html" title="Configuración">
+          <i data-feather="settings"></i>
+        </a>
       </nav>
     </header>
 
@@ -35,6 +48,11 @@
       <p>© 2025 Active Break — Versión de desarrollo</p>
     </footer>
 
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace();
+    </script>
     <script type="module" src="script.js"></script>
   </body>
 </html>

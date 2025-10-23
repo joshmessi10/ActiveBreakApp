@@ -3,15 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <title>Active Break - Estadísticas</title>
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <header>
-      <h1>📊 Estadísticas</h1>
+      <h1><i data-feather="bar-chart-2"></i> Estadísticas</h1>
       <nav>
-        <a href="index.html">Inicio</a>
-        <a href="stats.html" class="active">Estadísticas</a>
-        <a href="settings.html">Configuración</a>
+        <a href="index.html" title="Inicio">
+          <i data-feather="home"></i>
+        </a>
+        <a href="stats.html" class="active" title="Estadísticas">
+          <i data-feather="bar-chart-2"></i>
+        </a>
+        <a href="settings.html" title="Configuración">
+          <i data-feather="settings"></i>
+        </a>
       </nav>
     </header>
 
@@ -44,6 +57,11 @@
       <p>© 2025 Active Break</p>
     </footer>
 
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace();
+    </script>
     <script src="stats.js" type="module" defer></script>
   </body>
 </html>
