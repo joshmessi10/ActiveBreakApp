@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Active Break - Configuración</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>⚙️ Configuración</h1>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="stats.html">Estadísticas</a>
+      <a href="settings.html" class="active">Configuración</a>
+    </nav>
+  </header>
+
+  <main class="settings-page">
+    <h2>Ajustes de Detección</h2>
+
+    <div class="settings-option">
+      <label for="sensitivity">Sensibilidad del detector:</label>
+      <input type="range" id="sensitivity" min="1" max="10" value="5">
+      <span id="sensitivityValue">5</span>
+    </div>
+
+    <div class="settings-option">
+      <label>
+        <input type="checkbox" id="notifications" checked>
+        Mostrar notificaciones de postura
+      </label>
+    </div>
+
+    <button id="saveSettings">Guardar Cambios</button>
+  </main>
+
+  <footer>
+    <p>© 2025 Active Break</p>
+  </footer>
+
+  <script>
+    const slider = document.getElementById('sensitivity');
+    const output = document.getElementById('sensitivityValue');
+    slider.oninput = () => output.textContent = slider.value;
+
+    document.getElementById('saveSettings').addEventListener('click', () => {
+      alert('Configuración guardada ✅');
+    });
+  </script>
+</body>
+</html>

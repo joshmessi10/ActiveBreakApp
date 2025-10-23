@@ -2,25 +2,60 @@ body {
   font-family: 'Segoe UI', sans-serif;
   background: #0d1117;
   color: #fff;
-  text-align: center;
   margin: 0;
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 header {
   background: #1f6feb;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #30363d;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.5em;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0 10px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+nav a:hover {
+  background: #2ea043;
+}
+
+nav a.active {
+  background: #238636;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 20px;
-  border-radius: 0 0 12px 12px;
 }
 
 #camera-container {
   position: relative;
-  margin: 20px auto;
   width: 640px;
-  height: 480px;
+  height: 360px; /* 16:9 */
   border: 2px solid #30363d;
   border-radius: 10px;
   overflow: hidden;
+  margin-bottom: 20px;
 }
 
 video, canvas {
@@ -30,11 +65,53 @@ video, canvas {
   object-fit: cover;
 }
 
+#feedback p {
+  font-size: 18px;
+}
+
+.stats-container {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  padding: 20px;
+  border-radius: 10px;
+  width: 200px;
+  text-align: center;
+}
+
+.stat-card.correct {
+  background: #238636;
+}
+
+.stat-card.incorrect {
+  background: #a40e26;
+}
+
+.history {
+  border-collapse: collapse;
+  width: 80%;
+  margin: auto;
+}
+
+.history th, .history td {
+  border: 1px solid #444;
+  padding: 10px;
+  text-align: center;
+}
+
+.settings-option {
+  margin: 15px 0;
+  font-size: 18px;
+}
+
 button {
   background: #238636;
   border: none;
   color: white;
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
@@ -42,4 +119,11 @@ button {
 
 button:hover {
   background: #2ea043;
+}
+
+footer {
+  background: #161b22;
+  text-align: center;
+  padding: 10px;
+  border-top: 2px solid #30363d;
 }
