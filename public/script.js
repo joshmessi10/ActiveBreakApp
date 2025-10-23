@@ -21,6 +21,10 @@ let timerInterval = null;
 let seconds = 0;
 let running = false;
 
+// 🔔 Alert Threshold Globals
+let badPostureStartTime = null;
+let notificationSent = false;
+
 // 🕒 Formatea tiempo tipo mm:ss
 function formatTime(s) {
   const m = Math.floor(s / 60)
@@ -127,11 +131,55 @@ function classifyPose(pose) {
   const isCentered = noseX >= minX && noseX <= maxX;
 
   if (isCentered) {
+    // ✅ Good posture - Reset alert state
     statusText.textContent = "✅ Postura Correcta";
     statusText.style.color = "#2ea043";
+
+    // Reset bad posture tracking
+    if (badPostureStartTime !== null) {
+      console.log("✅ Posture corrected - resetting timer");
+    }
+    badPostureStartTime = null;
+    notificationSent = false;
   } else {
+    // ⚠️ Bad posture detected
     statusText.textContent = "⚠️ Postura Incorrecta - Centra tu cabeza";
     statusText.style.color = "#f85149";
+
+    // Start tracking bad posture duration
+    if (badPostureStartTime === null) {
+      badPostureStartTime = Date.now();
+      console.log("⚠️ Bad posture detected - starting timer");
+    }
+
+    // Check if bad posture has lasted 3+ seconds
+    const badPostureDuration = Date.now() - badPostureStartTime;
+
+    if (badPostureDuration > 3000 && !notificationSent) {
+      console.log(
+        `🔔 Bad posture for ${Math.round(
+          badPostureDuration / 1000
+        )}s - triggering notification`
+      );
+
+      // Send notification via IPC
+      if (window.api && window.api.sendNotification) {
+        console.log("✅ window.api.sendNotification is available");
+        window.api.sendNotification(
+          "¡Corrige tu postura! Has estado en mala posición por más de 3 segundos."
+        );
+        notificationSent = true;
+        console.log("📨 Notification sent via IPC");
+      } else {
+        console.error("❌ IPC API not available - window.api:", window.api);
+      }
+    } else if (badPostureDuration <= 3000) {
+      console.log(
+        `⏱️ Bad posture for ${Math.round(
+          badPostureDuration / 1000
+        )}s (waiting for 3s threshold)`
+      );
+    }
   }
 }
 
@@ -217,4 +265,18 @@ if (pauseBtn)
 // 🧠 Mensaje de bienvenida animado
 window.addEventListener("DOMContentLoaded", () => {
   statusText.textContent = "Bienvenido a ActiveBreak ✨";
+
+  // Test IPC bridge
+  console.log("🔍 Checking IPC bridge...");
+  console.log("window.api exists:", !!window.api);
+  console.log(
+    "window.api.sendNotification exists:",
+    !!(window.api && window.api.sendNotification)
+  );
+
+  if (window.api && window.api.sendNotification) {
+    console.log("✅ IPC bridge is ready!");
+  } else {
+    console.error("❌ IPC bridge NOT available! Notifications will not work.");
+  }
 });

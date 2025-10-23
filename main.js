@@ -1,5 +1,5 @@
 // main.js
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain, Notification } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -20,9 +20,28 @@ const createWindow = () => {
   });
 
   mainWindow.loadFile(path.join(__dirname, "public", "index.html"));
-  // Abre las herramientas de desarrollo opcionalmente
-  // mainWindow.webContents.openDevTools();
+  // Open dev tools to check for errors
+  mainWindow.webContents.openDevTools();
 };
+
+// 🔔 IPC Listener - Handle notification requests from renderer
+ipcMain.on("notify:posture", (event, message) => {
+  console.log("📬 IPC received: notify:posture -", message);
+
+  // Check if notifications are supported
+  if (Notification.isSupported()) {
+    const notification = new Notification({
+      title: "ActiveBreak Alert",
+      body: message || "Please check your posture!",
+      silent: false, // Enable sound
+    });
+
+    notification.show();
+    console.log("✅ Notification sent:", message);
+  } else {
+    console.log("❌ Notifications not supported on this system");
+  }
+});
 
 app.whenReady().then(createWindow);
 
