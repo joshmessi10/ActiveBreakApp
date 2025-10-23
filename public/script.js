@@ -143,16 +143,39 @@ function classifyPose(pose) {
   )
     return;
 
-  // Simple rule: nose should be horizontally between shoulders for good posture
+  // MILITARY-GRADE POSTURE: Head must be straight up, no slouching, no leaning
   const noseX = nose.x;
+  const noseY = nose.y;
   const leftShoulderX = leftShoulder.x;
+  const leftShoulderY = leftShoulder.y;
   const rightShoulderX = rightShoulder.x;
+  const rightShoulderY = rightShoulder.y;
 
-  const minX = Math.min(leftShoulderX, rightShoulderX);
-  const maxX = Math.max(leftShoulderX, rightShoulderX);
+  // Calculate shoulder midpoint and width
+  const shoulderMidX = (leftShoulderX + rightShoulderX) / 2;
+  const shoulderMidY = (leftShoulderY + rightShoulderY) / 2;
+  const shoulderWidth = Math.abs(rightShoulderX - leftShoulderX);
 
-  // Check if nose is centered between shoulders
-  const isCentered = noseX >= minX && noseX <= maxX;
+  // 🎖️ RULE 1: STRICT Horizontal alignment - head must be PERFECTLY centered
+  // Allow only 15% deviation from center (very strict!)
+  const horizontalDeviation = Math.abs(noseX - shoulderMidX);
+  const maxHorizontalDeviation = shoulderWidth * 0.15;
+  const isHorizontallyCentered = horizontalDeviation <= maxHorizontalDeviation;
+
+  // 🎖️ RULE 2: STRICT Vertical alignment - head must be TALL and UPRIGHT
+  // Military posture: head well above shoulders, no forward lean
+  const headShoulderDistance = shoulderMidY - noseY;
+  const minHeadHeight = shoulderWidth * 0.5; // 50% of shoulder width (STRICT!)
+  const isVerticallyAligned = headShoulderDistance > minHeadHeight;
+
+  // 🎖️ RULE 3: Shoulder symmetry - shoulders must be level (no tilting)
+  const shoulderHeightDiff = Math.abs(leftShoulderY - rightShoulderY);
+  const maxShoulderTilt = shoulderWidth * 0.1; // Max 10% tilt allowed
+  const shouldersAreLevel = shoulderHeightDiff <= maxShoulderTilt;
+
+  // ⚠️ MILITARY STANDARD: ALL conditions must pass (no exceptions!)
+  const isCentered =
+    isHorizontallyCentered && isVerticallyAligned && shouldersAreLevel;
   const currentState = isCentered ? "correct" : "incorrect";
 
   // 📝 Log state changes
@@ -173,8 +196,16 @@ function classifyPose(pose) {
     badPostureStartTime = null;
     notificationSent = false;
   } else {
-    // ⚠️ Bad posture detected
-    statusText.textContent = "⚠️ Postura Incorrecta - Centra tu cabeza";
+    // ⚠️ Bad posture detected - Provide specific feedback
+    let feedback = "⚠️ Postura Incorrecta - ";
+    if (!isHorizontallyCentered) {
+      feedback += "Centra tu cabeza";
+    } else if (!isVerticallyAligned) {
+      feedback += "Endereza tu espalda, siéntate erguido";
+    } else if (!shouldersAreLevel) {
+      feedback += "Nivela tus hombros";
+    }
+    statusText.textContent = feedback;
     statusText.style.color = "#f85149";
 
     // Start tracking bad posture duration

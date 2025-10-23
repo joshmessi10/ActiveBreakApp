@@ -6,7 +6,8 @@ Aplicación de Pausas Activas con Detección de Postura en Tiempo Real
 
 - ✅ **Detección de Postura en Tiempo Real**: Usando MoveNet (TensorFlow.js)
 - ✅ **Visualización de Skeleton**: Overlay profesional con 17 puntos clave
-- ✅ **Análisis Automático**: Clasificación de postura correcta/incorrecta
+- ✅ **Análisis Militar-Grade**: 3 reglas estrictas (alineación horizontal, vertical y simetría de hombros)
+- ✅ **Feedback Inteligente**: Mensajes específicos según el tipo de error detectado
 - ✅ **Notificaciones Configurables**: Alertas nativas con sonido (umbral ajustable 1-60s)
 - ✅ **Recordatorios de Pausas**: Sistema automático cada N minutos (5-120 min)
 - ✅ **Seguimiento de Estadísticas**: Tracking automático de tiempo en cada postura
@@ -52,8 +53,8 @@ La aplicación cargará automáticamente:
 
 ## 📊 Estado del Proyecto
 
-**Versión**: 6.1  
-**Estado**: Production Ready! 🎉 (AI + Notifications + Data + Settings + History + Professional UI/UX)
+**Versión**: 6.2  
+**Estado**: Production Ready! 🎉 (Military-Grade AI + Smart Feedback + Data + Settings + History + Professional UI/UX)
 
 Ver `project-purpose.md` para más detalles técnicos.
 
@@ -61,10 +62,13 @@ Ver `project-purpose.md` para más detalles técnicos.
 
 1. **Detección**: El modelo MoveNet analiza cada frame del video en tiempo real
 2. **Keypoints**: Identifica 17 puntos clave del cuerpo humano
-3. **Análisis**: Verifica si la nariz está alineada entre los hombros
-4. **Feedback Visual**: Muestra estado en tiempo real:
-   - ✅ Verde: Postura Correcta
-   - ⚠️ Rojo: Postura Incorrecta
+3. **Análisis Military-Grade**: Aplica 3 reglas estrictas simultáneamente:
+   - 🎖️ **Regla 1**: Alineación horizontal perfecta (tolerancia 15%)
+   - 🎖️ **Regla 2**: Postura vertical erguida (50% altura sobre hombros)
+   - 🎖️ **Regla 3**: Hombros nivelados (tolerancia 10% de inclinación)
+4. **Feedback Inteligente**: Muestra mensajes específicos según el error:
+   - ✅ Verde: "Postura Correcta"
+   - ⚠️ Rojo: "Centra tu cabeza" / "Endereza tu espalda, siéntate erguido" / "Nivela tus hombros"
 5. **Notificaciones**: Si mantienes mala postura por 3+ segundos:
    - 🔔 Notificación nativa del sistema operativo
    - 🔊 Sonido de alerta
@@ -113,7 +117,9 @@ Ver `project-purpose.md` para más detalles técnicos.
 - [x] ✅ UI/UX profesional con Inter font y Feather Icons
 - [x] ✅ Sistema de diseño con CSS variables
 - [x] ✅ Micro-interacciones y animaciones suaves
-- [ ] Análisis avanzado de postura (ángulos de columna)
+- [x] ✅ Detección military-grade con 3 reglas estrictas
+- [x] ✅ Sistema de feedback inteligente con mensajes específicos
+- [ ] Análisis avanzado de ángulos de columna vertebral
 - [ ] Exportar datos históricos (CSV/JSON)
 - [ ] Filtrado de historial por fecha/rango
 - [ ] Gráficos de progreso diario/semanal

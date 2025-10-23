@@ -107,7 +107,11 @@ ActiveBreakApp/
 
    - MoveNet Lightning model integration (TensorFlow.js)
    - Real-time pose landmark detection (17 keypoints)
-   - Posture classification algorithm (nose-shoulder alignment)
+   - Military-grade posture classification algorithm with 3 strict rules:
+     - Rule 1: Perfect horizontal alignment (15% tolerance)
+     - Rule 2: Strict vertical alignment (50% height requirement)
+     - Rule 3: Level shoulders (10% symmetry tolerance)
+   - Intelligent feedback system (specific correction messages)
    - Professional skeleton overlay rendering on canvas
    - Continuous inference loop with requestAnimationFrame
 
@@ -170,10 +174,14 @@ ActiveBreakApp/
 1. **Real-time Feedback System**
 
    - Status text elements with color-coded feedback (green/red)
-   - Basic posture classification (nose-shoulder alignment)
+   - Military-grade posture classification with 3-point validation:
+     - Horizontal centering (15% tolerance)
+     - Vertical alignment (50% height requirement)
+     - Shoulder symmetry (10% tilt tolerance)
+   - Specific correction messages based on detected issue
    - Desktop notifications with configurable threshold
    - Break timer and reminders with configurable intervals
-   - **Missing**: Advanced posture analysis (spine angle, shoulder slope)
+   - **Missing**: Advanced spine angle analysis
    - **Missing**: Visual posture correction guides
 
 2. **Data Persistence & Analytics**
@@ -199,8 +207,9 @@ ActiveBreakApp/
 
 1. ✅ Implement MoveNet model loading and initialization
 2. ✅ Create pose landmark detection on video stream
-3. ✅ Develop posture classification logic (nose-shoulder alignment)
-4. ✅ Draw pose skeleton overlay on canvas
+3. ✅ Develop military-grade posture classification with 3 strict rules
+4. ✅ Implement intelligent feedback system with specific messages
+5. ✅ Draw pose skeleton overlay on canvas
 
 ### ✅ Priority 2: Enhanced User Feedback - COMPLETED!
 
@@ -244,6 +253,6 @@ The project will be considered successfully implemented when:
 
 ---
 
-**Document Version**: 6.1  
+**Document Version**: 6.2  
 **Last Updated**: October 23, 2025  
-**Project Status**: Production Ready! 🎉 Complete Posture Monitoring with Professional UI/UX
+**Project Status**: Production Ready! 🎉 Military-Grade Posture Monitoring with Professional UI/UX
