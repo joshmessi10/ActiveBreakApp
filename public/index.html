@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Active Break</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>💪 Active Break</h1>
+    <p>Tu asistente para pausas activas y buena postura</p>
+  </header>
+
+  <main>
+    <section id="camera-container">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="output"></canvas>
+    </section>
+
+    <section id="feedback">
+      <p id="status">Iniciando cámara...</p>
+    </section>
+
+    <button id="start-btn">Iniciar Detección</button>
+  </main>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
