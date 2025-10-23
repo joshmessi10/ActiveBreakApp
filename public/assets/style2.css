@@ -1,0 +1,201 @@
+/* ============================================
+   CALM ACTIVE THEME (Dark Wellness)
+   ============================================ */
+:root {
+  /* Superficies */
+  --color-bg-primary: #0b1220;    /* fondo principal: azul-índigo profundo, descanso visual */
+  --color-bg-secondary: #111827;  /* contenedores */
+  --color-bg-tertiary: #1f2937;   /* tarjetas/hover */
+
+  /* Bordes */
+  --color-border: #2a3648;
+  --color-border-hover: #3a4a63;
+
+  /* Texto */
+  --color-text-primary: #e8f1ff;   /* alto contraste suave */
+  --color-text-secondary: #9fb3c8; /* secundario */
+  --color-text-muted: #7a8aa0;
+
+  /* Acentos (bienestar) */
+  --color-accent-primary: #14b8a6; /* teal-500 */
+  --color-accent-hover: #0ea5a3;   /* teal-600 */
+
+  /* Estados */
+  --color-success: #22c55e;        /* green-500 */
+  --color-success-hover: #16a34a;  /* green-600 */
+  --color-danger: #f43f5e;         /* rose-500 (menos agresivo que rojo puro) */
+  --color-danger-hover: #e11d48;   /* rose-600 */
+
+  /* Espaciado */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Radios */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Sombras (más suaves) */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.20);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.38);
+
+  /* Transiciones */
+  --transition-fast: 150ms ease;
+  --transition-base: 240ms ease;
+  --transition-slow: 360ms ease;
+
+  /* Tipografía base para ciertas utilidades */
+  --text: #e8f1ff;
+  --muted: #7a8aa0;
+}
+
+
+/* ===== Header & Nav refinados */
+header {
+  background: linear-gradient(180deg, rgba(17,24,39,.85), rgba(17,24,39,.65));
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--color-border);
+}
+header h1 svg { stroke: var(--color-accent-primary); }
+
+nav a {
+  background: rgba(31,41,55,.65);
+  border-color: transparent;
+}
+nav a:hover {
+  background: rgba(31,41,55,.85);
+  border-color: var(--color-border-hover);
+}
+nav a.active {
+  background: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+  color: #06151a;
+}
+nav a.active:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+/* ===== Contenedor de cámara: borde y halo más amable */
+#camera-container {
+  border: 1px solid rgba(58, 74, 99, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(20, 184, 166, 0.10),
+    var(--shadow-md);
+}
+#camera-container:hover {
+  box-shadow:
+    0 0 0 2px rgba(20, 184, 166, 0.15),
+    var(--shadow-lg);
+}
+
+/* ===== Tipos y feedback */
+#feedback p { color: var(--color-text-secondary); }
+
+/* ===== Tarjetas de estadística con tintes suaves (sin saturar) */
+.stat-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+  border: 1px solid var(--color-border);
+}
+.stat-card.correct {
+  background:
+    linear-gradient(180deg, rgba(34,197,94,0.18), rgba(34,197,94,0.10));
+  border-color: rgba(34,197,94,0.55);
+}
+.stat-card.incorrect {
+  background:
+    linear-gradient(180deg, rgba(244,63,94,0.18), rgba(244,63,94,0.10));
+  border-color: rgba(244,63,94,0.55);
+}
+
+/* ===== Tabla de historial: contraste cómodo */
+.history {
+  background: rgba(17,24,39,.85);
+}
+.history thead {
+  background: rgba(31,41,55,.85);
+}
+.history tbody tr:hover {
+  background: rgba(31,41,55,.65);
+}
+
+/* ===== Inputs y focus ring con teal */
+.settings-option input[type="range"],
+.settings-option input[type="number"] {
+  background: rgba(31,41,55,.65);
+  border: 1px solid var(--color-border);
+}
+.settings-option input:focus {
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 0 0 3px rgba(20,184,166,0.22);
+}
+.settings-option input[type="checkbox"] { accent-color: var(--color-accent-primary); }
+.settings-option span { color: var(--color-accent-primary); }
+
+/* ===== Botones base (primarios) en acento teal */
+button {
+  background: var(--color-accent-primary);
+  border: 1px solid var(--color-accent-primary);
+  color: #06151a;
+  box-shadow: 0 10px 24px rgba(20,184,166,.22);
+}
+button:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  box-shadow: 0 12px 28px rgba(20,184,166,.26);
+}
+button:focus {
+  box-shadow: 0 0 0 3px rgba(20,184,166,.28);
+}
+
+/* ===== Layout Index */
+.ab-right .stats-container { gap: 14px; }
+#posture-status { font-weight: 700; }
+#posture-icon { filter: drop-shadow(0 2px 6px rgba(0,0,0,.25)); }
+
+/* ===== Botón único Pausar/Reanudar (centrado en la columna derecha) */
+.ab-right .ab-controls {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.ab-toggle {
+  min-width: 200px;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform .06s ease, filter .2s ease, box-shadow .25s ease;
+  box-shadow: 0 12px 26px rgba(0,0,0,.25);
+}
+.ab-toggle:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.ab-toggle:active { transform: translateY(0); }
+
+/* Estado “Pausar” (grabando): rojo amable */
+.ab-toggle--red {
+  background: linear-gradient(180deg, var(--color-danger) 0%, rgba(239,68,68,.90) 100%);
+  box-shadow: 0 12px 28px rgba(239,68,68,.28);
+  border: 1px solid rgba(239,68,68,.55);
+}
+
+/* Estado “Reanudar”: verde wellness */
+.ab-toggle--green {
+  background: linear-gradient(180deg, var(--color-success) 0%, rgba(34,197,94,.92) 100%);
+  box-shadow: 0 12px 28px rgba(34,197,94,.28);
+  border: 1px solid rgba(34,197,94,.55);
+}
+
+/* ===== Footer translucido */
+footer {
+  background: linear-gradient(180deg, rgba(17,24,39,.65), rgba(17,24,39,.85));
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}

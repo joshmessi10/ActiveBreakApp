@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ActiveBreak — ¡Estamos listos para comenzar!</title>
+  <link rel="stylesheet" href="./style.css"/>
+  <style>
+    .landing {
+      min-height: 100vh; display: grid;
+      grid-template-columns: 1.1fr 0.9fr; gap: 2rem; align-items: center;
+      padding: 48px 6vw;
+    }
+    .landing__title { font-size: clamp(28px, 4vw, 42px); line-height:1.15; margin:0 0 16px; font-weight:800; }
+    .landing__desc  { font-size: 16px; color:#475569; margin: 0 0 20px; max-width: 60ch; }
+    .landing__actions { display:grid; gap:12px; max-width:420px; }
+    .btn {
+      border:0; border-radius:12px; padding:14px 18px; font-size:16px; font-weight:700;
+      background:#0ea5e9; color:#fff; text-decoration:none; text-align:center;
+      box-shadow:0 8px 18px rgba(14,165,233,.25);
+    }
+    .btn:hover { filter: brightness(1.05); box-shadow:0 10px 22px rgba(14,165,233,.28); }
+    .landing__hint { font-size:14px; color:#6b7280; }
+    .landing__art {
+      width:100%; aspect-ratio:4/3; border-radius:16px; border:2px dashed #c7c9d1;
+      background:#f8fafc; display:grid; place-items:center; color:#94a3b8;
+    }
+    @media (max-width: 900px){
+      .landing{ grid-template-columns:1fr; padding: 32px 5vw; }
+      .landing__art{ aspect-ratio:16/9; }
+    }
+  </style>
+</head>
+<body>
+  <main class="landing">
+    <!-- Columna izquierda: texto -->
+    <section>
+      <h1 class="landing__title">¡Estamos listos para comenzar!</h1>
+      <p class="landing__desc">
+        A continuación, descarga el archivo de <strong>instalación corporativa</strong>.
+        Este instalador conecta a tu empresa con <em>Pausas Activas Corporativas</em>,
+        habilitando las notificaciones y pausas activas en todos los equipos del dominio.
+      </p>
+
+      <div class="landing__actions">
+        <!-- Por ahora redirige a index.html. Cuando tengas el instalador real, cambia el href por el binario (.exe/.msi/.pkg) -->
+        <a class="btn" id="download-btn" href="./index.html">Descargar instalador</a>
+
+        <p class="landing__hint">
+          Consejo: comparte este instalador con el equipo de TI para un despliegue silencioso en tu dominio.
+        </p>
+      </div>
+    </section>
+
+    <!-- Columna derecha: espacio para imagen/arte -->
+    <section>
+      <div class="landing__art"><img src="./assets/Two.png" width="75%" alt="ActiveBreak"></div>
+    </section>
+  </main>
+</body>
+</html>

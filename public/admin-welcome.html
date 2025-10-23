@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ActiveBreak — Bienvenido</title>
+  <link rel="stylesheet" href="./style.css" />
+  <style>
+    .landing {
+      min-height: 100vh; display: grid;
+      grid-template-columns: 1.1fr 0.9fr; gap: 2rem; align-items: center;
+      padding: 48px 6vw;
+    }
+    .landing__title { font-size: clamp(28px, 4vw, 42px); line-height:1.15; margin:0 0 24px; font-weight:800; }
+    .landing__actions { display:grid; gap:12px; max-width:420px; }
+    .btn { border:0; border-radius:12px; padding:14px 18px; font-size:16px; font-weight:700; background:#4f46e5; color:#fff; text-decoration:none; text-align:center; }
+    .landing__hint { font-size:14px; color:#6b7280; }
+    .landing__hint a { color:#2563eb; text-decoration: underline; }
+    .landing__art { width:100%; aspect-ratio:4/3; border-radius:16px; border:2px dashed #c7c9d1; background:#f8fafc; display:grid; place-items:center; color:#94a3b8; }
+    @media (max-width: 900px){ .landing{ grid-template-columns:1fr; } .landing__art{ aspect-ratio:16/9; } }
+  </style>
+</head>
+<body>
+  <main class="landing">
+    <section>
+      <h1 class="landing__title">¡Bienvenido! 👋</h1>
+      <p class="landing__hint" style="margin-bottom:16px;">
+        Desde aquí puedes invitar y crear cuentas para tus usuarios.
+      </p>
+
+      <div class="landing__actions">
+        <!-- Botón principal → registrar cliente -->
+        <a class="btn" href="./client-register.html" id="goto-client-register">Registrar nuevo cliente</a>
+
+        <!-- Texto → si ya existe una cuenta -->
+        <p class="landing__hint">
+          ¿El usuario ya tiene cuenta?
+          <a href="./client-login.html" id="goto-client-login">Ir a Login de cliente</a>
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <div class="landing__art"><img src="./assets/One.png" width="75%" alt="ActiveBreak"></div>
+    </section>
+  </main>
+</body>
+</html>

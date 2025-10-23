@@ -19,7 +19,7 @@ const createWindow = () => {
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, "public", "index.html"));
+  mainWindow.loadFile(path.join(__dirname, "public", "landing.html"));
   // Open dev tools to check for errors
   mainWindow.webContents.openDevTools();
 };

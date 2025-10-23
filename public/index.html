@@ -33,16 +33,47 @@
       </nav>
     </header>
 
-    <main>
-      <section id="camera-container">
-        <video id="video" autoplay playsinline></video>
-        <canvas id="output"></canvas>
+    <main class="ab-layout">
+      <!-- Columna izquierda: cámara + feedback + controles -->
+      <section class="ab-left">
+        <section id="camera-container">
+          <video id="video" autoplay playsinline></video>
+          <canvas id="output"></canvas>
+        </section>
+
+        <section id="feedback">
+          <p id="status">Iniciando cámara...</p>
+        </section>
+
+        <div class="ab-controls">
+          <button id="toggle-btn" class="ab-toggle ab-toggle--red">Pausar</button>
+        </div>
       </section>
 
-      <section id="feedback">
-        <p id="status">Iniciando cámara...</p>
-      </section>
+      <!-- Columna derecha: HUD (Postura, Tiempo, Alertas) -->
+      <aside class="ab-right">
+        <div class="stats-container">
+          <div class="stat-card">
+            <h3>Postura</h3>
+            <p id="posture-status">
+              <span id="posture-icon" aria-hidden="true">—</span>
+              <span id="posture-text" class="muted">Sin datos</span>
+            </p>
+          </div>
+
+          <div class="stat-card">
+            <h3>Tiempo sesión</h3>
+            <p id="session-time">00:00</p>
+          </div>
+
+          <div class="stat-card">
+            <h3>Alertas</h3>
+            <p id="alerts-count">0</p>
+          </div>
+        </div>
+      </aside>
     </main>
+
 
     <footer>
       <p>© 2025 Active Break — Versión de desarrollo</p>

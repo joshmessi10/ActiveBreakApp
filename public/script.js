@@ -12,6 +12,8 @@ const pauseBtn = document.getElementById("pause-btn");
 const postureStatus = document.getElementById("posture-status");
 const sessionTime = document.getElementById("session-time");
 const alertsCount = document.getElementById("alerts-count");
+const postureIcon = document.getElementById('posture-icon');
+const postureText = document.getElementById('posture-text');
 
 // 🧠 B. Globals - AI and Canvas
 let detector = null;
@@ -30,6 +32,20 @@ let lastBreakNotificationTime = 0;
 
 // 📝 Event Logging Globals
 let lastPostureState = "correct"; // Track previous state to detect changes
+
+function setPosture(isGood) {
+  if (isGood) {
+    postureIcon.textContent = '✔';    // check
+    postureIcon.style.color = '#16a34a'; // verde
+    postureText.textContent = 'Correcta';
+    postureText.classList.remove('muted');
+  } else {
+    postureIcon.textContent = '✖';    // equis
+    postureIcon.style.color = '#dc2626'; // rojo
+    postureText.textContent = 'Incorrecta';
+    postureText.classList.remove('muted');
+  }
+}
 
 // 🕒 Formatea tiempo tipo mm:ss
 function formatTime(s) {
@@ -185,34 +201,37 @@ function classifyPose(pose) {
   }
 
   if (isCentered) {
-    // ✅ Good posture - Reset alert state
-    statusText.textContent = "✅ Postura Correcta";
-    statusText.style.color = "#2ea043";
+      // ✅ Good posture - Reset alert state
+      statusText.textContent = "✅ Postura Correcta";
+      statusText.style.color = "#2ea043";
+      setPosture(true); // PATCH ✔
 
-    // Reset bad posture tracking
-    if (badPostureStartTime !== null) {
-      console.log("✅ Posture corrected - resetting timer");
-    }
-    badPostureStartTime = null;
-    notificationSent = false;
-  } else {
-    // ⚠️ Bad posture detected - Provide specific feedback
-    let feedback = "⚠️ Postura Incorrecta - ";
-    if (!isHorizontallyCentered) {
-      feedback += "Centra tu cabeza";
-    } else if (!isVerticallyAligned) {
-      feedback += "Endereza tu espalda, siéntate erguido";
-    } else if (!shouldersAreLevel) {
-      feedback += "Nivela tus hombros";
-    }
-    statusText.textContent = feedback;
-    statusText.style.color = "#f85149";
+      // Reset bad posture tracking
+      if (badPostureStartTime !== null) {
+        console.log("✅ Posture corrected - resetting timer");
+      }
+      badPostureStartTime = null;
+      notificationSent = false;
 
-    // Start tracking bad posture duration
-    if (badPostureStartTime === null) {
-      badPostureStartTime = Date.now();
-      console.log("⚠️ Bad posture detected - starting timer");
-    }
+    } else {
+      // ⚠️ Bad posture detected - Provide specific feedback
+      let feedback = "⚠️ Postura Incorrecta - ";
+      if (!isHorizontallyCentered) {
+        feedback += "Centra tu cabeza";
+      } else if (!isVerticallyAligned) {
+        feedback += "Endereza tu espalda, siéntate erguido";
+      } else if (!shouldersAreLevel) {
+        feedback += "Nivela tus hombros";
+      }
+      statusText.textContent = feedback;
+      statusText.style.color = "#f85149";
+      setPosture(false); // PATCH ✖
+
+      // Start tracking bad posture duration
+      if (badPostureStartTime === null) {
+        badPostureStartTime = Date.now();
+        console.log("⚠️ Bad posture detected - starting timer");
+      }
 
     // ⚙️ Load alert threshold setting (default: 3 seconds)
     const alertThreshold = parseInt(
@@ -237,12 +256,16 @@ function classifyPose(pose) {
 
       // Send notification via IPC (only if enabled)
       if (notificationsEnabled && window.api && window.api.sendNotification) {
-        console.log("✅ window.api.sendNotification is available");
         window.api.sendNotification(
           `¡Corrige tu postura! Has estado en mala posición por más de ${alertThreshold} segundos.`
         );
         notificationSent = true;
-        console.log("📨 Notification sent via IPC");
+
+        // PATCH: incrementa el contador visual de alertas si el nodo existe
+        if (alertsCount) {
+          const prev = parseInt(alertsCount.textContent || "0", 10);
+          alertsCount.textContent = String(prev + 1);
+        }
       } else if (!notificationsEnabled) {
         console.log("🔕 Notifications disabled in settings");
         notificationSent = true; // Prevent repeated checks

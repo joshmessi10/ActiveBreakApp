@@ -1,16 +1,14 @@
-// preload.js
-const { contextBridge, ipcRenderer } = require("electron");
+// preload.js (ESM)
+import { contextBridge, ipcRenderer } from 'electron';
 
-// 🔒 Secure IPC Bridge - Expose API to renderer process
-contextBridge.exposeInMainWorld("api", {
-  // Send notification request to main process
-  sendNotification: (message) => {
-    ipcRenderer.send("notify:posture", message);
-    console.log("📤 Sending notification via IPC:", message);
+contextBridge.exposeInMainWorld('api', {
+  notify: (message) => ipcRenderer.invoke('notify', message),
+  settings: {
+    get: () => ipcRenderer.invoke('settings:get'),
+    set: (partial) => ipcRenderer.invoke('settings:set', partial),
   },
-});
-
-window.addEventListener("DOMContentLoaded", () => {
-  console.log("Frontend cargado correctamente");
-  console.log("IPC Bridge initialized ✅");
+  stats: {
+    add: (entry) => ipcRenderer.invoke('stats:add', entry),
+    all: () => ipcRenderer.invoke('stats:all'),
+  },
 });
