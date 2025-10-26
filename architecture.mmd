@@ -1,0 +1,77 @@
+graph TB
+    %% Electron Main Process
+    MainProcess["<b>Electron Main Process</b><br/>(main.js)<br/>---<br/>• Creates BrowserWindow<br/>• Handles IPC messages<br/>• Native notifications"]
+    
+    %% Entry Point
+    Landing["<b>Landing Page</b><br/>(landing.html)<br/>---<br/>• App entry point<br/>• User routing"]
+    
+    %% Admin Flow
+    AdminLogin["<b>Admin Login</b><br/>(admin/admin-login.html)<br/>---<br/>• Authentication form<br/>• In-memory validation"]
+    AdminRegister["<b>Admin Register</b><br/>(admin/admin-register.html)<br/>---<br/>• Registration form<br/>• Mockup only"]
+    AdminDashboard["<b>Admin Dashboard</b><br/>(admin/admin-welcome.html)<br/>---<br/>• Admin panel placeholder<br/>• Future: user management"]
+    
+    %% Client Flow
+    ClientLogin["<b>Client Login</b><br/>(client/client-login.html)<br/>---<br/>• Authentication form<br/>• In-memory validation"]
+    ClientRegister["<b>Client Register</b><br/>(client/client-register.html)<br/>---<br/>• Registration form<br/>• Mockup only"]
+    ClientReady["<b>Client Ready</b><br/>(client/client-ready.html)<br/>---<br/>• Welcome screen<br/>• Pre-detection prep"]
+    
+    %% Core AI App
+    CoreApp["<b>Core AI App</b><br/>(index.html)<br/>---<br/>• Video feed<br/>• Canvas overlay<br/>• Status display"]
+    
+    %% Core Logic
+    ScriptJS["<b>AI Logic</b><br/>(script.js)<br/>---<br/>• MoveNet model<br/>• Pose classification<br/>• 3-rule validation<br/>• Notification triggers<br/>• Data collection"]
+    
+    StatsJS["<b>Statistics</b><br/>(stats.js)<br/>---<br/>• Display times<br/>• Event history table<br/>• Read localStorage"]
+    
+    SettingsJS["<b>Settings</b><br/>(settings.js)<br/>---<br/>• Load/save config<br/>• localStorage persistence<br/>• 4 settings"]
+    
+    %% IPC Bridge
+    Preload["<b>IPC Bridge</b><br/>(preload.js)<br/>---<br/>• contextBridge API<br/>• Secure IPC channel<br/>• window.api.sendNotification()"]
+    
+    %% Notifications
+    Notifications["<b>Native Notifications</b><br/>---<br/>• OS-level alerts<br/>• Sound enabled<br/>• Posture warnings<br/>• Break reminders"]
+    
+    %% localStorage
+    LocalStorage[("<b>localStorage</b><br/>---<br/>• Settings (4 keys)<br/>• Time tracking (2 keys)<br/>• Event history (1 key)")]
+    
+    %% Flow Connections
+    MainProcess -->|loads| Landing
+    
+    Landing -->|"Admin button"| AdminLogin
+    Landing -->|"Client button"| ClientLogin
+    
+    AdminLogin -->|"Register link"| AdminRegister
+    AdminRegister -->|"Back to login"| AdminLogin
+    AdminLogin -->|"Success"| AdminDashboard
+    
+    ClientLogin -->|"Register link"| ClientRegister
+    ClientRegister -->|"Back to login"| ClientLogin
+    ClientLogin -->|"Success"| ClientReady
+    ClientReady -->|"Start button"| CoreApp
+    
+    CoreApp -->|"Loads"| ScriptJS
+    CoreApp -->|"Navigation"| StatsJS
+    CoreApp -->|"Navigation"| SettingsJS
+    
+    ScriptJS -->|"IPC call"| Preload
+    Preload -->|"IPC message"| MainProcess
+    MainProcess -->|"Shows"| Notifications
+    
+    ScriptJS -.->|"Read/Write"| LocalStorage
+    StatsJS -.->|"Read only"| LocalStorage
+    SettingsJS -.->|"Read/Write"| LocalStorage
+    
+    %% Styling
+    classDef mainProcess fill:#1f6feb,stroke:#388bfd,stroke-width:3px,color:#fff
+    classDef auth fill:#238636,stroke:#2ea043,stroke-width:2px,color:#fff
+    classDef coreApp fill:#a40e26,stroke:#f85149,stroke-width:3px,color:#fff
+    classDef logic fill:#9a6700,stroke:#bf8700,stroke-width:2px,color:#fff
+    classDef storage fill:#8250df,stroke:#986ee2,stroke-width:2px,color:#fff
+    classDef ipc fill:#bf4b00,stroke:#d97706,stroke-width:2px,color:#fff
+    
+    class MainProcess,Notifications mainProcess
+    class Landing,AdminLogin,AdminRegister,AdminDashboard,ClientLogin,ClientRegister,ClientReady auth
+    class CoreApp coreApp
+    class ScriptJS,StatsJS,SettingsJS logic
+    class LocalStorage storage
+    class Preload ipc
