@@ -101,6 +101,34 @@ Ver `project-purpose.md` para más detalles técnicos.
     - 💫 Efectos de elevación en tarjetas
     - 🎭 Transiciones fluidas en todos los elementos
 
+## 🛠️ Implementación
+
+### Admin Login
+
+<img width="1205" height="735" alt="Admin1" src="https://github.com/user-attachments/assets/63916f27-5460-4090-82c3-9a8d4efef5bd" />
+<img width="1161" height="748" alt="Admin2" src="https://github.com/user-attachments/assets/f51a04d1-3e48-4c04-a091-b02a3175aad3" />
+<img width="1122" height="761" alt="Admin3" src="https://github.com/user-attachments/assets/2a7beca7-089f-43aa-9bbf-344cc5ecf0e2" />
+
+### Client Login
+
+<img width="1191" height="718" alt="Client1" src="https://github.com/user-attachments/assets/33cb3901-c60e-40c8-8672-e3dc80d9c6f3" />
+<img width="1107" height="760" alt="Client2" src="https://github.com/user-attachments/assets/28718d6d-6c27-403e-bd88-3d8b3c5805f8" />
+<img width="827" height="662" alt="Client3" src="https://github.com/user-attachments/assets/dc28354b-39fa-479e-a499-a77d47b2e530" />
+
+### Download
+<img width="1175" height="695" alt="Download" src="https://github.com/user-attachments/assets/a6b5ede4-c994-425b-98d3-e08944df0397" />
+
+
+### Main Page
+<img width="1225" height="762" alt="Main1" src="https://github.com/user-attachments/assets/e11347a8-c9bb-4eb8-9517-b667e33eeb60" />
+<img width="1168" height="677" alt="Main2" src="https://github.com/user-attachments/assets/2ace1ca2-d70f-486e-86c2-39aa6329cd61" />
+
+
+### Settings
+<img width="1210" height="780" alt="Settings1" src="https://github.com/user-attachments/assets/b82b930b-ed71-4daf-a926-abb8701b7cef" />
+
+
+
 ## 📝 Próximas Mejoras
 
 - [x] ✅ Notificaciones de escritorio con sonido
@@ -120,7 +148,7 @@ Ver `project-purpose.md` para más detalles técnicos.
 - [x] ✅ Detección military-grade con 3 reglas estrictas
 - [x] ✅ Sistema de feedback inteligente con mensajes específicos
 - [ ] Análisis avanzado de ángulos de columna vertebral
-- [ ] Exportar datos históricos (CSV/JSON)
+- [x] ✅ Exportar datos históricos (CSV/JSON)
 - [ ] Filtrado de historial por fecha/rango
 - [ ] Gráficos de progreso diario/semanal
 - [ ] Sugerencias de ejercicios de estiramiento
