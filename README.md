@@ -105,7 +105,7 @@ Ver `project-purpose.md` para más detalles técnicos.
 
 ### Admin Login
 
-<img width="1205" height="735" alt="Admin1" src="https://github.com/user-attachments/assets/63916f27-5460-4090-82c3-9a8d4efef5bd" />
+<img width="640" alt="Admin1" src="https://github.com/user-attachments/assets/63916f27-5460-4090-82c3-9a8d4efef5bd" />
 <img width="1161" height="748" alt="Admin2" src="https://github.com/user-attachments/assets/f51a04d1-3e48-4c04-a091-b02a3175aad3" />
 <img width="1122" height="761" alt="Admin3" src="https://github.com/user-attachments/assets/2a7beca7-089f-43aa-9bbf-344cc5ecf0e2" />
 
