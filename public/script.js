@@ -6,14 +6,13 @@ const { SupportedModels, createDetector } = window.poseDetection;
 // 🎨 DOM Elements
 const video = document.getElementById("video");
 const canvas = document.getElementById("output");
-const statusText = document.getElementById("status");
-const startBtn = document.getElementById("start-btn");
-const pauseBtn = document.getElementById("pause-btn");
+const toggleBtn = document.getElementById("toggle-btn");
 const postureStatus = document.getElementById("posture-status");
 const sessionTime = document.getElementById("session-time");
 const alertsCount = document.getElementById("alerts-count");
-const postureIcon = document.getElementById('posture-icon');
-const postureText = document.getElementById('posture-text');
+const postureCard   = document.getElementById("posture-card");
+const postureDetail = document.getElementById("posture-detail");
+const alertsCard    = document.getElementById("alerts-card");
 
 // 🧠 B. Globals - AI and Canvas
 let detector = null;
@@ -22,6 +21,7 @@ let stream = null;
 let timerInterval = null;
 let seconds = 0;
 let running = false;
+let paused = false;
 
 // 🔔 Alert Threshold Globals
 let badPostureStartTime = null;
@@ -32,19 +32,34 @@ let lastBreakNotificationTime = 0;
 
 // 📝 Event Logging Globals
 let lastPostureState = "correct"; // Track previous state to detect changes
+const statusText = postureDetail;
 
 function setPosture(isGood) {
   if (isGood) {
-    postureIcon.textContent = '✔';    // check
-    postureIcon.style.color = '#16a34a'; // verde
-    postureText.textContent = 'Correcta';
-    postureText.classList.remove('muted');
+    postureCard.classList.add('correct');
+    postureCard.classList.remove('incorrect');
   } else {
-    postureIcon.textContent = '✖';    // equis
-    postureIcon.style.color = '#dc2626'; // rojo
-    postureText.textContent = 'Incorrecta';
-    postureText.classList.remove('muted');
+    postureCard.classList.add('incorrect');
+    postureCard.classList.remove('correct');
   }
+}
+
+function registerAlert() {
+  const current = parseInt(alertsCount.textContent || "0", 10) + 1;
+  alertsCount.textContent = String(current);
+  localStorage.setItem("alertsCount", String(current));
+
+  // opcional: historial de timestamps si lo usas en otro sitio
+  try {
+    const key = "alertsHistory";
+    const arr = JSON.parse(localStorage.getItem(key)) || [];
+    arr.unshift(Date.now());
+    if (arr.length > 1000) arr.length = 1000;
+    localStorage.setItem(key, JSON.stringify(arr));
+  } catch {}
+
+  alertsCard.classList.remove("blink"); void alertsCard.offsetWidth;
+  alertsCard.classList.add("blink");
 }
 
 // 🕒 Formatea tiempo tipo mm:ss
@@ -76,7 +91,7 @@ async function startCamera() {
 // 🤖 C. Init Function - Load MediaPipe Pose model
 async function initPoseDetection() {
   try {
-    statusText.textContent = "Cargando modelo de IA... ⏳";
+    statusText.textContent = "Cargando... ⏳";
 
     // 1. Get canvas and context
     ctx = canvas.getContext("2d");
@@ -108,8 +123,9 @@ async function initPoseDetection() {
 
 // 🔄 E. Detection Loop - Continuous pose estimation
 async function detectPose() {
+  
   if (!detector) return;
-
+  if (paused) { requestAnimationFrame(detectPose); return; }
   try {
     // Get pose estimations from video
     const poses = await detector.estimatePoses(video);
@@ -202,82 +218,48 @@ function classifyPose(pose) {
 
   if (isCentered) {
       // ✅ Good posture - Reset alert state
-      statusText.textContent = "✅ Postura Correcta";
+      statusText.textContent = "✅ Buena Postura";
       statusText.style.color = "#2ea043";
       setPosture(true); // PATCH ✔
 
       // Reset bad posture tracking
       if (badPostureStartTime !== null) {
-        console.log("✅ Posture corrected - resetting timer");
       }
       badPostureStartTime = null;
       notificationSent = false;
 
     } else {
-      // ⚠️ Bad posture detected - Provide specific feedback
-      let feedback = "⚠️ Postura Incorrecta - ";
-      if (!isHorizontallyCentered) {
-        feedback += "Centra tu cabeza";
-      } else if (!isVerticallyAligned) {
-        feedback += "Endereza tu espalda, siéntate erguido";
-      } else if (!shouldersAreLevel) {
-        feedback += "Nivela tus hombros";
-      }
-      statusText.textContent = feedback;
-      statusText.style.color = "#f85149";
-      setPosture(false); // PATCH ✖
+       setPosture(false);
 
-      // Start tracking bad posture duration
+      let feedback = "⚠️ ";
+      if (!isHorizontallyCentered)      feedback += "Centra tu cabeza";
+      else if (!isVerticallyAligned)     feedback += "Endereza tu espalda";
+      else if (!shouldersAreLevel)       feedback += "Nivela tus hombros";
+
+      statusText.textContent = feedback;
+      statusText.style.color = "#e11d48";
+
       if (badPostureStartTime === null) {
         badPostureStartTime = Date.now();
-        console.log("⚠️ Bad posture detected - starting timer");
       }
 
-    // ⚙️ Load alert threshold setting (default: 3 seconds)
-    const alertThreshold = parseInt(
-      localStorage.getItem("settings_alertThreshold") || "3",
-      10
-    );
-    const alertThresholdMs = alertThreshold * 1000;
 
-    // Check if bad posture has lasted longer than threshold
+    const alertThreshold = parseInt(localStorage.getItem("settings_alertThreshold") || "3", 10);
     const badPostureDuration = Date.now() - badPostureStartTime;
 
-    if (badPostureDuration > alertThresholdMs && !notificationSent) {
-      console.log(
-        `🔔 Bad posture for ${Math.round(
-          badPostureDuration / 1000
-        )}s - triggering notification`
-      );
 
-      // ⚙️ Check if notifications are enabled (default: true)
-      const notificationsEnabled =
-        localStorage.getItem("settings_notifications") !== "false";
+      if (badPostureDuration > alertThreshold * 1000 && !notificationSent) {
+      // ⚠️ Se disparó una alerta: cuenta SIEMPRE
+      registerAlert();
+      notificationSent = true;
 
-      // Send notification via IPC (only if enabled)
+      // luego, si las notificaciones están habilitadas, avisa
+      const notificationsEnabled = localStorage.getItem("settings_notifications") !== "false";
       if (notificationsEnabled && window.api && window.api.sendNotification) {
         window.api.sendNotification(
-          `¡Corrige tu postura! Has estado en mala posición por más de ${alertThreshold} segundos.`
+          `¡Corrige tu postura! Llevas más de ${alertThreshold}s en mala posición.`
         );
-        notificationSent = true;
-
-        // PATCH: incrementa el contador visual de alertas si el nodo existe
-        if (alertsCount) {
-          const prev = parseInt(alertsCount.textContent || "0", 10);
-          alertsCount.textContent = String(prev + 1);
-        }
-      } else if (!notificationsEnabled) {
-        console.log("🔕 Notifications disabled in settings");
-        notificationSent = true; // Prevent repeated checks
-      } else {
-        console.error("❌ IPC API not available - window.api:", window.api);
       }
-    } else if (badPostureDuration <= alertThresholdMs) {
-      console.log(
-        `⏱️ Bad posture for ${Math.round(
-          badPostureDuration / 1000
-        )}s (waiting for ${alertThreshold}s threshold)`
-      );
     }
   }
 }
@@ -371,68 +353,84 @@ function logPostureEvent(state) {
 
 // �📊 H. Data Collection - Track time in each posture state
 function startDataCollection() {
-  console.log("📊 Data collection started - tracking posture time");
-
-  setInterval(() => {
-    // Check current posture state
+  if (dataInterval) return;
+  dataInterval = setInterval(() => {
     const isPostureBad = badPostureStartTime !== null;
 
-    if (isPostureBad) {
-      // Increment incorrect posture time
-      let incorrectSeconds = parseInt(
-        localStorage.getItem("incorrectSeconds") || "0",
-        10
-      );
-      incorrectSeconds++;
-      localStorage.setItem("incorrectSeconds", incorrectSeconds.toString());
-    } else {
-      // Increment correct posture time (only if detector is active)
-      if (detector) {
-        let correctSeconds = parseInt(
-          localStorage.getItem("correctSeconds") || "0",
-          10
-        );
-        correctSeconds++;
-        localStorage.setItem("correctSeconds", correctSeconds.toString());
+    if (detector && running && !paused) {
+      if (isPostureBad) {
+        let incorrectSeconds = parseInt(localStorage.getItem("incorrectSeconds") || "0", 10);
+        localStorage.setItem("incorrectSeconds", String(++incorrectSeconds));
+      } else {
+        let correctSeconds = parseInt(localStorage.getItem("correctSeconds") || "0", 10);
+        localStorage.setItem("correctSeconds", String(++correctSeconds));
       }
     }
 
-    // ⏰ Break Timer - Send reminder at configured intervals
-    // Get current session time
+    // recordatorios de pausa (sin cambios)
     const elapsedSeconds = seconds;
-
-    // ⚙️ Load break interval setting (default: 30 minutes)
-    const breakIntervalMinutes = parseInt(
-      localStorage.getItem("settings_breakInterval") || "30",
-      10
-    );
+    const breakIntervalMinutes = parseInt(localStorage.getItem("settings_breakInterval") || "30", 10);
     const breakIntervalSeconds = breakIntervalMinutes * 60;
 
-    // Check if it's time for a break (and session has started)
-    // Only trigger once per interval using lastBreakNotificationTime
     if (
+      running && !paused &&
       elapsedSeconds > 0 &&
       elapsedSeconds % breakIntervalSeconds === 0 &&
       elapsedSeconds !== lastBreakNotificationTime &&
-      window.api &&
-      window.api.sendNotification
+      window.api && window.api.sendNotification &&
+      (localStorage.getItem("settings_notifications") !== "false")
     ) {
-      // ⚙️ Check if notifications are enabled
-      const notificationsEnabled =
-        localStorage.getItem("settings_notifications") !== "false";
-
-      if (notificationsEnabled) {
-        console.log(`⏰ Break time! (${breakIntervalMinutes} minutes elapsed)`);
-        window.api.sendNotification(
-          "¡Hora de descansar! Tómate un breve descanso y estírate."
-        );
-        lastBreakNotificationTime = elapsedSeconds; // Mark this interval as notified
-      }
+      window.api.sendNotification("¡Hora de descansar! Tómate un breve descanso y estírate.");
+      lastBreakNotificationTime = elapsedSeconds;
     }
-  }, 1000); // Run every 1 second
+  }, 1000);
 }
 
 startCamera();
+
+// --- refs y estado ---
+function setToggleUIRunning(){
+  if(!toggleBtn) return;
+  toggleBtn.textContent = "Pausar";
+  toggleBtn.classList.remove("ab-toggle--green");
+  toggleBtn.classList.add("ab-toggle--red");
+}
+function setToggleUIPaused(){
+  if(!toggleBtn) return;
+  toggleBtn.textContent = "Reanudar";
+  toggleBtn.classList.remove("ab-toggle--red");
+  toggleBtn.classList.add("ab-toggle--green");
+}
+
+// Detener y reanudar cámara
+function stopCamera(){
+  if(stream){
+    stream.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+    stream = null;
+  }
+  paused = true;
+  statusText.textContent = "Cámara pausada ⏸️";
+  setToggleUIPaused();
+}
+
+if (toggleBtn) {
+  setToggleUIRunning(); // arranca en "Pausar"
+  toggleBtn.addEventListener("click", () => {
+    if (!paused) {
+      stopCamera();
+    } else {
+      startCamera();
+      paused = false;
+      setToggleUIRunning();
+    }
+  });
+}
+
+(function initAlertsCount(){
+  const stored = parseInt(localStorage.getItem("alertsCount") || "0", 10);
+  alertsCount.textContent = String(stored);
+})();
 
 // ⏱️ Temporizador de sesión
 function startTimer() {
@@ -452,15 +450,187 @@ function stopTimer() {
   clearInterval(timerInterval);
 }
 
-// 🎮 Eventos de botones (only if elements exist)
-if (startBtn) startBtn.addEventListener("click", startCamera);
-if (pauseBtn)
-  pauseBtn.addEventListener("click", () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      statusText.textContent = "Cámara pausada ⏸️";
-    }
+(function adminGate(){
+  const settingsLink = document.getElementById('nav-settings');
+  const modal = document.getElementById('admin-gate');
+  if (!settingsLink || !modal) return;
+
+  const form = document.getElementById('adminGateForm');
+  const emailEl = document.getElementById('gateEmail');
+  const passEl  = document.getElementById('gatePass');
+  const msgEl   = document.getElementById('gateMsg');
+
+  const LS_ACCOUNTS_KEY = "ab_org_accounts";
+
+  async function sha256(text){
+    const enc = new TextEncoder().encode(text);
+    const buf = await crypto.subtle.digest("SHA-256", enc);
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,"0")).join("");
+  }
+  function loadAccounts(){
+    try { return JSON.parse(localStorage.getItem(LS_ACCOUNTS_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function open(){ modal.setAttribute('aria-hidden','false'); setTimeout(()=>emailEl?.focus(), 50); }
+  function close(){ modal.setAttribute('aria-hidden','true'); form.reset(); msgEl.textContent=""; }
+
+  // abrir modal en vez de navegar
+  settingsLink.addEventListener('click', (e)=>{
+    e.preventDefault();
+    open();
   });
+
+  // cerrar si clic en backdrop o botón ✕
+  modal.addEventListener('click', (e)=>{
+    if (e.target.hasAttribute('data-close')) close();
+  });
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    msgEl.textContent = "Verificando…";
+
+    const email = emailEl.value.trim().toLowerCase();
+    const pass  = passEl.value;
+
+    const accs = loadAccounts();
+    const acc = accs.find(a => a.email.toLowerCase() === email);
+    if (!acc) { msgEl.textContent = "No existe una cuenta con ese correo."; return; }
+
+    const hash = await sha256(pass);
+    if (hash !== acc.passHash) { msgEl.textContent = "Contraseña incorrecta."; return; }
+
+    // OK → navega a Ajustes
+    msgEl.textContent = "Acceso concedido. Abriendo Ajustes…";
+    setTimeout(()=>{ window.location.href = "settings.html"; }, 250);
+  });
+})();
+
+// ===== Reset de sesión al iniciar la app (cada ejecución empieza en cero)
+(function resetSession() {
+  try {
+    localStorage.setItem("correctSeconds", "0");
+    localStorage.setItem("incorrectSeconds", "0");
+    localStorage.setItem("alertsCount", "0");
+    localStorage.setItem("postureHistory", "[]");
+    localStorage.setItem("alertsHistory", "[]"); // si usas historial de alertas
+  } catch (e) {
+    console.warn("No se pudo resetear la sesión:", e);
+  }
+})();
+
+// ===== Modal de Estadísticas (en vivo, calculado desde eventos de la sesión) =====
+(function statsModalSession(){
+  const link  = document.getElementById('nav-stats');
+  const modal = document.getElementById('stats-modal');
+  if (!link || !modal) return;
+
+  const tbody        = modal.querySelector('#stats-table tbody');
+  const kpiCorrect   = modal.querySelector('#kpi-correct');
+  const kpiIncorrect = modal.querySelector('#kpi-incorrect');
+  const kpiAlerts    = modal.querySelector('#kpi-alerts');
+  const btnExport    = modal.querySelector('#stats-export');
+
+  // Inicio de sesión (una sola vez por ejecución)
+  if (!window.__AB_SESSION_T0) window.__AB_SESSION_T0 = Date.now();
+
+  let refreshTimer = null;
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function hhmmss(total){
+    const h = Math.floor(total/3600);
+    const m = Math.floor((total%3600)/60);
+    const s = Math.floor(total%60);
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
+  function loadHistory(){
+    try { return JSON.parse(localStorage.getItem('postureHistory'))||[]; }
+    catch { return []; }
+  }
+
+  // Reconstruye tiempos de la SESIÓN a partir de eventos (desde __AB_SESSION_T0)
+  function computeSessionDurations(){
+    const t0 = window.__AB_SESSION_T0;
+    const t1 = Date.now();
+
+    // postureHistory está guardado NEWEST FIRST ⇒ lo invertimos
+    const hist = loadHistory().slice().reverse();
+
+    // Estado al inicio de la sesión: si hay eventos previos a t0, tomamos el último;
+    // si no, asumimos "Correcta" por defecto.
+    let currentState = "Correcta";
+    for (let i = hist.length - 1; i >= 0; i--) {
+      if (hist[i].timestamp < t0) { currentState = hist[i].type; break; }
+    }
+
+    let lastTime = t0;
+    let correct = 0, incorrect = 0;
+
+    for (const ev of hist) {
+      if (ev.timestamp < t0) continue;
+      if (ev.timestamp > t1) break;
+      const dt = (ev.timestamp - lastTime) / 1000;
+      if (currentState === "Correcta") correct += dt; else incorrect += dt;
+      currentState = ev.type;
+      lastTime = ev.timestamp;
+    }
+
+    // Tramo final hasta ahora
+    const dtLast = (t1 - lastTime) / 1000;
+    if (currentState === "Correcta") correct += dtLast; else incorrect += dtLast;
+
+    // Filas de la tabla (solo sesión)
+    const todays = hist.filter(ev => ev.timestamp >= t0 && ev.timestamp <= t1);
+    const rows = todays.map((ev, i) => {
+      const next = (i < todays.length - 1) ? todays[i+1].timestamp : t1;
+      return {
+        time: new Date(ev.timestamp).toLocaleTimeString(),
+        type: ev.type,
+        duration: hhmmss(Math.max(0, Math.floor((next - ev.timestamp)/1000)))
+      };
+    });
+
+    return {
+      correct: Math.max(0, Math.floor(correct)),
+      incorrect: Math.max(0, Math.floor(incorrect)),
+      rows
+    };
+  }
+
+  function render(){
+    const {correct, incorrect, rows} = computeSessionDurations();
+    const alerts = parseInt(localStorage.getItem('alertsCount') || '0', 10);
+
+    kpiCorrect.textContent   = hhmmss(correct);
+    kpiIncorrect.textContent = hhmmss(incorrect);
+    kpiAlerts.textContent    = String(alerts);
+
+    tbody.innerHTML = '';
+    // más recientes arriba:
+    rows.slice().reverse().forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.time}</td><td>${r.type}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function open(){ modal.setAttribute('aria-hidden','false'); render(); refreshTimer = setInterval(render, 1000); }
+  function close(){ modal.setAttribute('aria-hidden','true'); if (refreshTimer){ clearInterval(refreshTimer); refreshTimer = null; } }
+
+  link.addEventListener('click', (e)=>{ e.preventDefault(); open(); });
+  modal.addEventListener('click', (e)=>{ if (e.target.hasAttribute('data-close')) close(); });
+
+  btnExport.addEventListener('click', ()=>{
+    const hist = loadHistory().filter(ev => ev.timestamp >= window.__AB_SESSION_T0);
+    const rows = [['timestamp','hora_local','evento']];
+    hist.forEach(ev => rows.push([ev.timestamp, new Date(ev.timestamp).toLocaleString(), ev.type]));
+    const csv = rows.map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    const a = document.createElement('a'); a.href = url; a.download = `activebreak_sesion_${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  });
+})();
+
 
 // 🧠 Mensaje de bienvenida animado
 window.addEventListener("DOMContentLoaded", () => {

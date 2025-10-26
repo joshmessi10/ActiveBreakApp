@@ -24,10 +24,10 @@
         <a href="index.html" class="active" title="Inicio">
           <i data-feather="home"></i>
         </a>
-        <a href="stats.html" title="Estadísticas">
+        <a href="stats.html" id="nav-stats" title="Estadísticas">
           <i data-feather="bar-chart-2"></i>
         </a>
-        <a href="settings.html" title="Configuración">
+        <a href="settings.html" id="nav-settings" title="Configuración">
           <i data-feather="settings"></i>
         </a>
       </nav>
@@ -41,9 +41,7 @@
           <canvas id="output"></canvas>
         </section>
 
-        <section id="feedback">
-          <p id="status">Iniciando cámara...</p>
-        </section>
+        
 
         <div class="ab-controls">
           <button id="toggle-btn" class="ab-toggle ab-toggle--red">Pausar</button>
@@ -52,27 +50,85 @@
 
       <!-- Columna derecha: HUD (Postura, Tiempo, Alertas) -->
       <aside class="ab-right">
-        <div class="stats-container">
-          <div class="stat-card">
-            <h3>Postura</h3>
-            <p id="posture-status">
-              <span id="posture-icon" aria-hidden="true">—</span>
-              <span id="posture-text" class="muted">Sin datos</span>
-            </p>
-          </div>
-
-          <div class="stat-card">
-            <h3>Tiempo sesión</h3>
-            <p id="session-time">00:00</p>
-          </div>
-
-          <div class="stat-card">
-            <h3>Alertas</h3>
-            <p id="alerts-count">0</p>
-          </div>
+       <div class="stats-container">
+        <div class="stat-card" id="posture-card">
+          <h3>Postura</h3>
+          <div id="posture-detail" class="posture-detail">Bienvenido a ActiveBreak ✨</div>
         </div>
+
+        <div class="stat-card" id="session-card">
+          <h3>Tiempo sesión</h3>
+          <p id="session-time">00:00</p>
+        </div>
+
+        <div class="stat-card" id="alerts-card">
+          <h3>Alertas</h3>
+          <p id="alerts-count">0</p>
+        </div>
+      </div>
       </aside>
     </main>
+
+    <div class="modal" id="admin-gate" aria-hidden="true">
+      <div class="modal__backdrop" data-close></div>
+      <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="adminGateTitle">
+        <h2 id="adminGateTitle">Acceso de Administrador</h2>
+        <p class="muted">Ingresa tus credenciales de administrador para continuar a Ajustes.</p>
+
+        <form id="adminGateForm" class="row" autocomplete="on">
+          <label for="gateEmail">Correo</label>
+          <input id="gateEmail" type="email" required placeholder="admin@tu-org.com" />
+          <label for="gatePass">Contraseña</label>
+          <input id="gatePass" type="password" required placeholder="••••••••" />
+          <button class="btn" type="submit">Continuar</button>
+          <div id="gateMsg" class="muted" style="margin-top:6px;"></div>
+        </form>
+
+        <button class="modal__close" type="button" data-close aria-label="Cerrar">✕</button>
+      </div>
+    </div>
+
+   <!-- ===== Modal de Estadísticas (en vivo, sesión actual) ===== -->
+    <div class="modal" id="stats-modal" aria-hidden="true">
+      <div class="modal__backdrop" data-close></div>
+
+      <div class="modal__dialog modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+        <button class="modal__close" type="button" data-close aria-label="Cerrar">✕</button>
+
+        <h2 id="statsTitle">Estadísticas de la sesión</h2>
+
+        <div class="stats-kpis">
+          <div class="kpi kpi--correct">
+            <span class="kpi__label">Tiempo postura correcta</span>
+            <span class="kpi__value" id="kpi-correct">00:00:00</span>
+          </div>
+          <div class="kpi kpi--incorrect">
+            <span class="kpi__label">Tiempo postura incorrecta</span>
+            <span class="kpi__value" id="kpi-incorrect">00:00:00</span>
+          </div>
+          <div class="kpi kpi--alerts">
+            <span class="kpi__label">Alertas</span>
+            <span class="kpi__value" id="kpi-alerts">0</span>
+          </div>
+        </div>
+
+        <div class="stats-table-wrap">
+          <table class="history" id="stats-table">
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Evento</th>
+              </tr>
+            </thead>
+            <tbody><!-- JS --></tbody>
+          </table>
+        </div>
+
+        <div class="stats-actions">
+          <button class="btn" id="stats-export">Exportar CSV (sesión)</button>
+        </div>
+      </div>
+    </div>
 
 
     <footer>
