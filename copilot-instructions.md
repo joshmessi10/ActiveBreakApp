@@ -213,6 +213,7 @@ contextBridge.exposeInMainWorld("api", {
 **✅ VERIFIED Global Variables (Lines 1-36)**:
 
 **Critical State Variables**:
+
 ```javascript
 // AI and Canvas
 let detector = null;
@@ -239,6 +240,7 @@ let myPostureChart = null;
 ```
 
 **⚠️ CRITICAL BUG FIX - Session Timer**:
+
 - **Problem**: Timer was stuck at 00:00 because `running` was never set to `true`
 - **Solution**: Set `running = true` in `initPoseDetection()` (line 119)
 - **Impact**: Session timer now counts up correctly
@@ -1600,6 +1602,7 @@ When modifying this codebase, be aware of these **VERIFIED WORKING FEATURES**:
    - Separate `alertsHistory` array (max 1000)
 
 6. **Session Timer** (script.js lines 483-495):
+
    - **⚠️ CRITICAL FIX**: Set `running = true` in `initPoseDetection()` (line 119) for timer to work
    - Auto-starts with detection
    - Displayed in UI (mm:ss format)
