@@ -197,11 +197,20 @@ function classifyPose(pose) {
   const maxHorizontalDeviation = shoulderWidth * 0.15;
   const isHorizontallyCentered = horizontalDeviation <= maxHorizontalDeviation;
 
-  // 🎖️ RULE 2: STRICT Vertical alignment - head must be TALL and UPRIGHT
-  // Military posture: head well above shoulders, no forward lean
-  const headShoulderDistance = shoulderMidY - noseY;
-  const minHeadHeight = shoulderWidth * 0.5; // 50% of shoulder width (STRICT!)
-  const isVerticallyAligned = headShoulderDistance > minHeadHeight;
+  // 🎖️ RULE 2: ADVANCED Neck/Upper Spine Angle Analysis (NEW!)
+  // Calculate the angle of the vector from shoulder midpoint to nose
+  // In this coordinate system, -90° (-PI/2) is perfectly vertical (upright)
+  // We allow +/- 15° tolerance (between -75° and -105°)
+  const deltaX = noseX - shoulderMidX;
+  const deltaY = noseY - shoulderMidY;
+  const angleRadians = Math.atan2(deltaY, deltaX);
+  const angleDegrees = (angleRadians * 180) / Math.PI;
+
+  // Vertical is -90°. Check if angle is within +/- 15° of vertical
+  // This means: -105° <= angle <= -75°
+  const minAngle = -105;
+  const maxAngle = -75;
+  const isUpright = angleDegrees >= minAngle && angleDegrees <= maxAngle;
 
   // 🎖️ RULE 3: Shoulder symmetry - shoulders must be level (no tilting)
   const shoulderHeightDiff = Math.abs(leftShoulderY - rightShoulderY);
@@ -209,8 +218,7 @@ function classifyPose(pose) {
   const shouldersAreLevel = shoulderHeightDiff <= maxShoulderTilt;
 
   // ⚠️ MILITARY STANDARD: ALL conditions must pass (no exceptions!)
-  const isCentered =
-    isHorizontallyCentered && isVerticallyAligned && shouldersAreLevel;
+  const isCentered = isHorizontallyCentered && isUpright && shouldersAreLevel;
   const currentState = isCentered ? "correct" : "incorrect";
 
   // 📝 Log state changes
@@ -235,7 +243,7 @@ function classifyPose(pose) {
 
     let feedback = "⚠️ ";
     if (!isHorizontallyCentered) feedback += "Centra tu cabeza";
-    else if (!isVerticallyAligned) feedback += "Endereza tu espalda";
+    else if (!isUpright) feedback += "Endereza tu espalda";
     else if (!shouldersAreLevel) feedback += "Nivela tus hombros";
 
     statusText.textContent = feedback;
