@@ -294,5 +294,7 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 9. **Optimizar Chart.js para eliminar animación de recarga cada segundo (ahora usa update() en vez de destroy/recreate)**
 10. **Implementar paginación para tabla de historial de eventos (20 eventos por página con navegación prev/next)**
 11. **Implementar análisis de sesiones con registro automático de eventos Session Start/End**
+12. **Implementar sugerencias de ejercicios de estiramiento (4 ejercicios con selección aleatoria)**
+13. **Implementar temporizador de cuenta regresiva para próximo descanso (muestra tiempo restante en mm:ss)**
 
-La aplicación ahora incluye un sistema de autenticación de producción completo con almacenamiento seguro de usuarios, gestión avanzada de sesiones, análisis de datos con filtrado temporal, visualización gráfica de progreso optimizada, navegación paginada de eventos, y **tracking completo de sesiones con registro automático de inicio/fin**. **Documentación 100% verificada y lista para producción.**
+La aplicación ahora incluye un sistema de autenticación de producción completo con almacenamiento seguro de usuarios, gestión avanzada de sesiones, análisis de datos con filtrado temporal, visualización gráfica de progreso optimizada, navegación paginada de eventos, tracking completo de sesiones con registro automático de inicio/fin, **sugerencias inteligentes de ejercicios de estiramiento**, y **temporizador de cuenta regresiva para descansos**. **Documentación 100% verificada y lista para producción.**

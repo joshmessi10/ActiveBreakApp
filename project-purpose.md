@@ -383,9 +383,9 @@ The app is **fully production-ready** for deployment: real-time posture detectio
 
 ---
 
-**Document Version**: 20.0 (Session-Based Tracking Implementation)  
-**Last Updated**: October 27, 2025 (After Session Start/End Event Logging)  
-**Project Status**: Core AI Functional ✅ | Notifications Working ✅ | Stats Fully Persistent ✅ | **Date-Range Filtering Complete ✅** | **Advanced Spine Angle Analysis ✅** | **Analytics & Charts ✅** | **Pagination ✅** | **Session Tracking ✅** | Build Ready ✅ | **Authentication Production-Ready ✅** | **Session Security Hardened ✅** | **Documentation 100% Verified ✅**
+**Document Version**: 21.0 (Exercise Suggestions & Break Countdown Timer)  
+**Last Updated**: October 27, 2025 (After Exercise Suggestions & Break Countdown Implementation)  
+**Project Status**: Core AI Functional ✅ | Notifications Working ✅ | Stats Fully Persistent ✅ | **Date-Range Filtering Complete ✅** | **Advanced Spine Angle Analysis ✅** | **Analytics & Charts ✅** | **Pagination ✅** | **Session Tracking ✅** | **Exercise Suggestions ✅** | **Break Countdown ✅** | Build Ready ✅ | **Authentication Production-Ready ✅** | **Session Security Hardened ✅** | **Documentation 100% Verified ✅**
 
 **Update Summary**:
 
@@ -396,3 +396,9 @@ The app is **fully production-ready** for deployment: real-time posture detectio
 5. **Implemented session-based tracking with automatic Session Start/End event logging**
 6. Session events logged on: camera start, camera pause, logout, and window close
 7. Session events displayed in history table with special styling (centered, italic, spanning both columns)
+8. **Implemented stretching exercise suggestions (4 exercises with random selection)**
+9. Break notifications now include random exercise suggestions: Giro de Cuello, Estiramiento de Hombros, Estiramiento de Muñeca, Mirada Lejana
+10. **Enhanced notification system to support title + body parameters** (replaced single message parameter)
+11. **Implemented break countdown timer showing time remaining until next break**
+12. New stat card "Próximo descanso" displays real-time countdown in mm:ss format
+13. Countdown updates every second and respects user's configured break interval setting

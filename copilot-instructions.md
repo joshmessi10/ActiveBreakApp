@@ -1,12 +1,14 @@
-# Copilot Instructions v7.0 - ActiveBreakApp
+# Copilot Instructions v14.0 - ActiveBreakApp
 
 ## ✅ **PRODUCTION AUTHENTICATION EDITION - FULLY FUNCTIONAL**
 
-**Document Status**: ✅ Updated with date-range filtering feature (October 27, 2025)  
+**Document Status**: ✅ Updated with exercise suggestions & break countdown timer (October 27, 2025)  
 **Authentication Status**: Full production implementation with database persistence  
 **Bug Status**: All critical bugs resolved - IPC, data persistence, and authentication fully working  
 **Statistics**: Modal-based with date-range filtering (start/end date inputs with filter/reset buttons)  
 **Date Filtering**: Fully implemented - filters events by timestamp range with empty state handling
+**Exercise Suggestions**: ✅ 4 stretching exercises with random selection on break notifications
+**Break Countdown**: ✅ Real-time countdown timer showing time until next break
 
 ## 📋 Project Overview
 
@@ -139,22 +141,26 @@ app.whenReady().then(async () => {
 });
 ```
 
-**Critical Code** (lines 217-226):
+**Critical Code** (lines 253-268):
 
 ```javascript
-ipcMain.on("notify:posture", (event, message) => {
+// ✅ UPDATED: Two-parameter handler for rich notifications
+ipcMain.on("notify:posture", (event, title, body) => {
+  console.log("📬 IPC received: notify:posture -", title, body);
+
   if (Notification.isSupported()) {
     const notification = new Notification({
-      title: "ActiveBreak Alert",
-      body: message || "Please check your posture!",
+      title: title || "ActiveBreak Alert",
+      body: body || "¡Revisa tu postura!",
       silent: false,
     });
     notification.show();
+    console.log("✅ Notification sent:", title, body);
   }
 });
 ```
 
-**Status**: ✅ **FULLY FUNCTIONAL** - Database + Authentication + Notifications all working
+**Status**: ✅ **FULLY FUNCTIONAL** - Database + Authentication + Enhanced Notifications all working
 
 ---
 
@@ -175,14 +181,16 @@ ipcMain.on("notify:posture", (event, message) => {
 - ✅ Uses `ipcRenderer.send()` for notifications (sync) matching `main.js`
 - ✅ Uses `ipcRenderer.invoke()` for auth/admin (async) matching `ipcMain.handle()`
 
-**Current Code** (lines 1-12):
+**Current Code** (lines 1-14):
 
 ```javascript
 // preload.js (CommonJS - Required for Electron preload scripts)
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("api", {
-  sendNotification: (message) => ipcRenderer.send("notify:posture", message),
+  // ✅ UPDATED: Two-parameter signature for rich notifications
+  sendNotification: (title, body) =>
+    ipcRenderer.send("notify:posture", title, body),
   authRegister: (email, password, role, additionalData) =>
     ipcRenderer.invoke("auth:register", email, password, role, additionalData),
   authLogin: (email, password) =>
@@ -196,21 +204,21 @@ contextBridge.exposeInMainWorld("api", {
 
 **API Surface Exposed to Renderer**:
 
-1. `window.api.sendNotification(message)` - Send desktop notification
+1. `window.api.sendNotification(title, body)` - ✅ **UPDATED**: Send desktop notification with custom title and body
 2. `window.api.authRegister(email, password, role, additionalData)` - Register new user
 3. `window.api.authLogin(email, password)` - Authenticate existing user
 4. `window.api.adminGetAllUsers()` - Fetch all users for admin dashboard table
 5. `window.api.adminDeleteUser(userId)` - Delete user by ID from database
 
-**Status**: ✅ **FIXED AND WORKING** - All IPC channels aligned with main.js handlers
+**Status**: ✅ **FIXED AND WORKING** - All IPC channels aligned with main.js handlers, notification API enhanced
 
 ---
 
-### **3. `public/script.js` (Core AI Logic)** - 960 lines
+### **3. `public/script.js` (Core AI Logic)** - 1012 lines
 
-**Responsibility**: AI pose detection, classification, notifications, data tracking, pagination, session tracking
+**Responsibility**: AI pose detection, classification, notifications, data tracking, pagination, session tracking, exercise suggestions, break countdown
 
-**✅ VERIFIED Global Variables (Lines 1-36)**:
+**✅ VERIFIED Global Variables (Lines 1-40)**:
 
 **Critical State Variables**:
 
@@ -237,6 +245,35 @@ let lastPostureState = "correct";
 
 // Chart.js Global
 let myPostureChart = null;
+```
+
+**✅ NEW: Exercise Suggestions Array (Lines 7-24)**:
+
+```javascript
+const breakExercises = [
+  {
+    name: "Giro de Cuello",
+    desc: "Gira tu cabeza lentamente de lado a lado durante 15 segundos.",
+  },
+  {
+    name: "Estiramiento de Hombros",
+    desc: "Encoge tus hombros hacia tus orejas, mantén 5s y relaja.",
+  },
+  {
+    name: "Estiramiento de Muñeca",
+    desc: "Extiende tu brazo y flexiona tu muñeca hacia arriba y abajo (10s).",
+  },
+  {
+    name: "Mirada Lejana",
+    desc: "Enfoca tu vista en un objeto lejano (20m+) durante 20 segundos.",
+  },
+];
+```
+
+**✅ NEW: Break Countdown DOM Element (Line 31)**:
+
+```javascript
+const breakTime = document.getElementById("break-time"); // Displays countdown to next break
 ```
 
 **⚠️ CRITICAL BUG FIX - Session Timer**:
@@ -317,11 +354,11 @@ function logPostureEvent(state) {
 **✅ VERIFIED Settings Read (All 4 Settings)**:
 
 - Line 138: `settings_sensitivity` (1-10, default: 5) ✅
-- Line 218: `settings_alertThreshold` (1-60s, default: 3) ✅
-- Line 227: `settings_notifications` (true/false, default: true) ✅
-- Line 308: `settings_breakInterval` (5-120min, default: 30) ✅
+- Line 286: `settings_alertThreshold` (1-60s, default: 3) ✅
+- Line 295: `settings_notifications` (true/false, default: true) ✅
+- Line 432: `settings_breakInterval` (5-120min, default: 30) ✅
 
-**❌ BROKEN Notification System (Lines 218-234)**:
+**✅ WORKING Posture Alert Notification System (Lines 286-304)**:
 
 ```javascript
 const alertThreshold = parseInt(
@@ -337,18 +374,18 @@ if (badPostureDuration > alertThreshold * 1000 && !notificationSent) {
   const notificationsEnabled =
     localStorage.getItem("settings_notifications") !== "false";
   if (notificationsEnabled && window.api && window.api.sendNotification) {
+    // ✅ NEW: Two-parameter notification with title and body
     window.api.sendNotification(
+      "¡Alerta de Postura!",
       `¡Corrige tu postura! Llevas más de ${alertThreshold}s en mala posición.`
     );
   }
 }
 ```
 
-**Status**: ✅ **FIXED AND WORKING** - IPC connection now functional
+**Status**: ✅ **FIXED AND WORKING** - IPC connection functional with enhanced notification API
 
-**✅ WORKING Break Reminder System (Lines 305-318)**:
-
-**✅ WORKING Break Reminder System (Lines 305-318)**:
+**✅ WORKING Break Reminder System with Exercise Suggestions (Lines 425-456)**:
 
 ```javascript
 const breakIntervalMinutes = parseInt(
@@ -367,12 +404,72 @@ if (
   window.api.sendNotification &&
   localStorage.getItem("settings_notifications") !== "false"
 ) {
-  window.api.sendNotification("¡Hora de descansar! ...");
+  // ✅ NEW: Random exercise selection from breakExercises array
+  const exercise =
+    breakExercises[Math.floor(Math.random() * breakExercises.length)];
+  // ✅ NEW: Two-parameter notification with exercise suggestion
+  window.api.sendNotification(
+    `¡Hora de un Descanso! (Ejercicio)`,
+    `Sugerencia: ${exercise.name} - ${exercise.desc}`
+  );
   lastBreakNotificationTime = elapsedSeconds;
 }
 ```
 
-**Status**: ✅ **FIXED AND WORKING** - Break reminders now fire correctly
+**Status**: ✅ **FULLY WORKING** - Sends random stretching exercise suggestions with each break notification
+
+**✅ NEW: Break Countdown Timer (Lines 516-544)**:
+
+**Timer Function Enhancement** (Lines 516-520):
+
+```javascript
+function startTimer() {
+  seconds = 0;
+  stopTimer();
+  timerInterval = setInterval(() => {
+    seconds++;
+    if (sessionTime) {
+      sessionTime.textContent = formatTime(seconds);
+    }
+    // ✅ NEW: Update break countdown every second
+    updateBreakCountdown();
+  }, 1000);
+}
+```
+
+**Break Countdown Logic** (Lines 527-544):
+
+```javascript
+function updateBreakCountdown() {
+  if (!breakTime) return;
+
+  const breakIntervalSeconds =
+    parseInt(localStorage.getItem("settings_breakInterval") || "20", 10) * 60;
+
+  const elapsedSeconds = seconds;
+  const nextBreakAt =
+    Math.ceil((elapsedSeconds + 1) / breakIntervalSeconds) *
+    breakIntervalSeconds;
+  const remainingSeconds = nextBreakAt - elapsedSeconds;
+
+  if (running && !paused) {
+    breakTime.textContent = formatTime(remainingSeconds);
+  } else {
+    breakTime.textContent = "--:--";
+  }
+}
+```
+
+**Camera Stop Enhancement** (Line 481):
+
+```javascript
+// Reset break countdown display when camera stops
+if (breakTime) {
+  breakTime.textContent = "--:--";
+}
+```
+
+**Status**: ✅ **FULLY WORKING** - Displays real-time countdown to next break in mm:ss format
 
 **✅ FIXED - Session Persistence (Lines 459-473)**:
 
@@ -1611,25 +1708,53 @@ When modifying this codebase, be aware of these **VERIFIED WORKING FEATURES**:
    - **Reset behavior**: Timer resets on each new session (camera restart)
 
 7. **Data Collection Interval** (script.js lines 385-430):
+
    - **Global variable**: `dataInterval` tracks the 1-second collection interval
    - Collects posture time data every second when `running = true` and not `paused`
    - Increments `correctSeconds` or `incorrectSeconds` in localStorage
    - Handles break reminders based on `elapsedSeconds`
    - **⚠️ CRITICAL CLEANUP**: Cleared in `stopCamera()` to prevent memory leaks
 
+8. **Exercise Suggestions System** (script.js lines 7-24, 447-452):
+
+   - **NEW**: `breakExercises` array with 4 stretching exercises
+   - Random selection on each break notification
+   - Exercises: Giro de Cuello, Estiramiento de Hombros, Estiramiento de Muñeca, Mirada Lejana
+   - Integrated with break reminder notification system
+   - Uses enhanced two-parameter notification API
+
+9. **Break Countdown Timer** (script.js lines 31, 516-544, 481):
+   - **NEW**: Displays countdown to next break in "Próximo descanso" stat card
+   - Updates every second in sync with session timer
+   - Calculates remaining time based on break interval setting
+   - Shows `--:--` when camera is paused/stopped
+   - Format: mm:ss (e.g., "19:45", "00:30")
+   - Respects user's configured break interval from settings
+
 ---
 
-**Document Version**: 13.0 (Session Timer & Data Collection Bug Fixes)  
+**Document Version**: 14.0 (Exercise Suggestions & Break Countdown Timer)  
 **Last Updated**: October 27, 2025  
 **Changes Applied**:
 
+- ✅ **🆕 FEATURE: Implemented stretching exercise suggestions (4 exercises with random selection)**
+- ✅ **🆕 FEATURE: Added break countdown timer showing time until next break**
+- ✅ **🔄 UPDATED: Enhanced notification system to support title + body parameters**
+- ✅ **🔄 UPDATED: main.js notification handler now accepts (title, body) instead of (message)**
+- ✅ **🔄 UPDATED: preload.js IPC bridge updated to pass (title, body)**
+- ✅ **🔄 UPDATED: script.js notification calls updated to two-parameter format**
+- ✅ **📊 CORRECTED: script.js file size updated from 960 to 1012 lines (+52 lines)**
+- ✅ **📝 ADDED: Exercise suggestions array documentation (lines 7-24)**
+- ✅ **📝 ADDED: Break countdown timer documentation (lines 516-544)**
+- ✅ **📝 ADDED: breakTime DOM element reference (line 31)**
+- ✅ **📝 ADDED: Section 8 documenting exercise suggestions system**
+- ✅ **📝 ADDED: Section 9 documenting break countdown timer**
 - ✅ **🔴 CRITICAL FIX: Added `dataInterval` global variable (line 22) - was causing ReferenceError in pose detection**
 - ✅ **🔴 CRITICAL FIX: Set `running = true` in initPoseDetection() (line 119) - session timer was stuck at 00:00**
 - ✅ **🔴 CRITICAL FIX: Added timer cleanup in stopCamera() (lines 460-464) - prevents memory leaks**
 - ✅ **NEW: Implemented session-based tracking with Session Start/End events**
 - ✅ **NEW: Added global variables documentation section with all critical state variables**
 - ✅ **NEW: Added Section 7 documenting data collection interval system (lines 385-430)**
-- ✅ **CORRECTED: script.js file size updated from 918 to 960 lines (session tracking + bug fixes)**
 - ✅ Completed comprehensive line-by-line QA audit of all documentation vs. code
 - ✅ Fixed minor line number discrepancies in Section 6 (admin-dashboard.js)
 - ✅ Verified all 5 IPC handlers match exactly (main.js lines 62-232)
@@ -1657,6 +1782,8 @@ When modifying this codebase, be aware of these **VERIFIED WORKING FEATURES**:
 **Spine Angle Analysis**: ✅ Fully implemented with Math.atan2() angle calculation (±15° from vertical)  
 **Chart.js Analytics**: ✅ Fully implemented with stacked bar chart, daily aggregation, optimized update pattern (no animation reload)  
 **Pagination**: ✅ Fully implemented with 20 events per page, prev/next navigation, and page counter display  
+**Exercise Suggestions**: ✅ Fully implemented with 4 stretching exercises, random selection on break notifications
+**Break Countdown**: ✅ Fully implemented with real-time countdown timer in stat card, mm:ss format  
 **Documentation Status**: ✅ 100% accuracy verified through strict QA audit (all features documented, line numbers corrected)  
 **Status**: 🟢 **ALL SYSTEMS FUNCTIONAL - PRODUCTION READY - DOCUMENTATION VERIFIED - ANALYTICS COMPLETE - PAGINATION IMPLEMENTED**  
 **Project Completion**: ~100% of core features working, documentation 100% accurate, advanced analytics + pagination operational
