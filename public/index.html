@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <title>Active Break - Detección de Postura</title>
+
+    <!-- Session Validation - Must load FIRST -->
+    <script src="auth-guard.js"></script>
+    <script>
+      checkClientSession();
+    </script>
+
     <!-- Google Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,11 +31,22 @@
         <a href="index.html" class="active" title="Inicio">
           <i data-feather="home"></i>
         </a>
-        <a href="stats.html" id="nav-stats" title="Estadísticas">
+        <a
+          href="#"
+          id="nav-stats"
+          title="Estadísticas"
+          onclick="document.getElementById('stats-modal').setAttribute('aria-hidden', 'false'); return false;"
+        >
           <i data-feather="bar-chart-2"></i>
         </a>
-        <a href="settings.html" id="nav-settings" title="Configuración">
-          <i data-feather="settings"></i>
+        <a
+          href="#"
+          id="nav-logout"
+          title="Volver a Inicio"
+          onclick="logout(); return false;"
+          style="margin-left: auto"
+        >
+          <i data-feather="log-out"></i>
         </a>
       </nav>
     </header>
@@ -41,59 +59,97 @@
           <canvas id="output"></canvas>
         </section>
 
-        
-
         <div class="ab-controls">
-          <button id="toggle-btn" class="ab-toggle ab-toggle--red">Pausar</button>
+          <button id="toggle-btn" class="ab-toggle ab-toggle--red">
+            Pausar
+          </button>
         </div>
       </section>
 
       <!-- Columna derecha: HUD (Postura, Tiempo, Alertas) -->
       <aside class="ab-right">
-       <div class="stats-container">
-        <div class="stat-card" id="posture-card">
-          <h3>Postura</h3>
-          <div id="posture-detail" class="posture-detail">Bienvenido a ActiveBreak ✨</div>
-        </div>
+        <div class="stats-container">
+          <div class="stat-card" id="posture-card">
+            <h3>Postura</h3>
+            <div id="posture-detail" class="posture-detail">
+              Bienvenido a ActiveBreak ✨
+            </div>
+          </div>
 
-        <div class="stat-card" id="session-card">
-          <h3>Tiempo sesión</h3>
-          <p id="session-time">00:00</p>
-        </div>
+          <div class="stat-card" id="session-card">
+            <h3>Tiempo sesión</h3>
+            <p id="session-time">00:00</p>
+          </div>
 
-        <div class="stat-card" id="alerts-card">
-          <h3>Alertas</h3>
-          <p id="alerts-count">0</p>
+          <div class="stat-card" id="alerts-card">
+            <h3>Alertas</h3>
+            <p id="alerts-count">0</p>
+          </div>
         </div>
-      </div>
       </aside>
     </main>
 
     <div class="modal" id="admin-gate" aria-hidden="true">
       <div class="modal__backdrop" data-close></div>
-      <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="adminGateTitle">
+      <div
+        class="modal__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="adminGateTitle"
+      >
         <h2 id="adminGateTitle">Acceso de Administrador</h2>
-        <p class="muted">Ingresa tus credenciales de administrador para continuar a Ajustes.</p>
+        <p class="muted">
+          Ingresa tus credenciales de administrador para continuar a Ajustes.
+        </p>
 
         <form id="adminGateForm" class="row" autocomplete="on">
           <label for="gateEmail">Correo</label>
-          <input id="gateEmail" type="email" required placeholder="admin@tu-org.com" />
+          <input
+            id="gateEmail"
+            type="email"
+            required
+            placeholder="admin@tu-org.com"
+          />
           <label for="gatePass">Contraseña</label>
-          <input id="gatePass" type="password" required placeholder="••••••••" />
+          <input
+            id="gatePass"
+            type="password"
+            required
+            placeholder="••••••••"
+          />
           <button class="btn" type="submit">Continuar</button>
-          <div id="gateMsg" class="muted" style="margin-top:6px;"></div>
+          <div id="gateMsg" class="muted" style="margin-top: 6px"></div>
         </form>
 
-        <button class="modal__close" type="button" data-close aria-label="Cerrar">✕</button>
+        <button
+          class="modal__close"
+          type="button"
+          data-close
+          aria-label="Cerrar"
+        >
+          ✕
+        </button>
       </div>
     </div>
 
-   <!-- ===== Modal de Estadísticas (en vivo, sesión actual) ===== -->
+    <!-- ===== Modal de Estadísticas (en vivo, sesión actual) ===== -->
     <div class="modal" id="stats-modal" aria-hidden="true">
       <div class="modal__backdrop" data-close></div>
 
-      <div class="modal__dialog modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
-        <button class="modal__close" type="button" data-close aria-label="Cerrar">✕</button>
+      <div
+        class="modal__dialog modal__dialog--wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="statsTitle"
+      >
+        <button
+          class="modal__close"
+          type="button"
+          data-close
+          aria-label="Cerrar"
+        >
+          ✕
+        </button>
 
         <h2 id="statsTitle">Estadísticas de la sesión</h2>
 
@@ -112,6 +168,24 @@
           </div>
         </div>
 
+        <!-- Date Range Filter Controls -->
+        <div class="stats-filters">
+          <div class="filter-group">
+            <label for="startDate">Fecha inicio:</label>
+            <input type="date" id="startDate" class="stats-filter-input" />
+          </div>
+          <div class="filter-group">
+            <label for="endDate">Fecha fin:</label>
+            <input type="date" id="endDate" class="stats-filter-input" />
+          </div>
+          <div class="filter-actions">
+            <button type="button" id="filterButton" class="btn">Filtrar</button>
+            <button type="button" id="resetButton" class="btn btn-secondary">
+              Resetear
+            </button>
+          </div>
+        </div>
+
         <div class="stats-table-wrap">
           <table class="history" id="stats-table">
             <thead>
@@ -120,7 +194,9 @@
                 <th>Evento</th>
               </tr>
             </thead>
-            <tbody><!-- JS --></tbody>
+            <tbody>
+              <!-- JS -->
+            </tbody>
           </table>
         </div>
 
@@ -129,7 +205,6 @@
         </div>
       </div>
     </div>
-
 
     <footer>
       <p>© 2025 Active Break — Versión de desarrollo</p>
@@ -140,6 +215,6 @@
     <script>
       feather.replace();
     </script>
-    <script type="module" src="script.js"></script>
+    <script src="script.js"></script>
   </body>
 </html>

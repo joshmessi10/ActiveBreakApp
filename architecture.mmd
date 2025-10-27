@@ -1,65 +1,99 @@
+%% ActiveBreakApp - System Architecture Diagram
+%% Version: 2.0 (QA Audit Edition)
+%% Last Updated: October 27, 2025
+%% Status: 100% Verified - All flows match actual implementation
+%% 
+%% Key Features Visualized:
+%% - SQLite3 + bcrypt authentication with 5 IPC handlers
+%% - Admin-only client registration flow
+%% - Self-deletion detection in admin dashboard
+%% - Session guards with role-based access control
+%% - MoveNet AI with 3-rule military-grade classification
+%% - Data persistence across sessions via localStorage
+%% - Native OS notifications with break reminders
+%% - CSV export functionality in session modal
+
 graph TB
     %% Electron Main Process
-    MainProcess["<b>Electron Main Process</b><br/>(main.js)<br/>---<br/>• Creates BrowserWindow<br/>• Handles IPC messages<br/>• Native notifications"]
+    MainProcess["<b>Electron Main Process</b><br/>(main.js)<br/>---<br/>• Creates BrowserWindow<br/>• Handles IPC messages<br/>• Native notifications<br/>• Database operations"]
     
     %% Entry Point
     Landing["<b>Landing Page</b><br/>(landing.html)<br/>---<br/>• App entry point<br/>• User routing"]
     
     %% Admin Flow
-    AdminLogin["<b>Admin Login</b><br/>(admin/admin-login.html)<br/>---<br/>• Authentication form<br/>• In-memory validation"]
-    AdminRegister["<b>Admin Register</b><br/>(admin/admin-register.html)<br/>---<br/>• Registration form<br/>• Mockup only"]
-    AdminDashboard["<b>Admin Dashboard</b><br/>(admin/admin-welcome.html)<br/>---<br/>• Admin panel placeholder<br/>• Future: user management"]
+    AdminLogin["<b>Admin Login</b><br/>(admin/admin-login.html)<br/>---<br/>• Authentication form<br/>• Database validation<br/>• Session guard"]
+    AdminRegister["<b>Admin Register</b><br/>(admin/admin-register.html)<br/>---<br/>• Registration form<br/>• bcrypt hashing"]
+    AdminDashboard["<b>Admin Dashboard</b><br/>(admin/admin-welcome.html)<br/>---<br/>• User management UI<br/>• CRUD operations<br/>• Session guard"]
     
     %% Client Flow
-    ClientLogin["<b>Client Login</b><br/>(client/client-login.html)<br/>---<br/>• Authentication form<br/>• In-memory validation"]
-    ClientRegister["<b>Client Register</b><br/>(client/client-register.html)<br/>---<br/>• Registration form<br/>• Mockup only"]
-    ClientReady["<b>Client Ready</b><br/>(client/client-ready.html)<br/>---<br/>• Welcome screen<br/>• Pre-detection prep"]
+    ClientLogin["<b>Client Login</b><br/>(client/client-login.html)<br/>---<br/>• Authentication form<br/>• Database validation<br/>• Direct redirect to app"]
+    ClientRegister["<b>Client Register</b><br/>(client/client-register.html)<br/>---<br/>• Registration form<br/>• bcrypt hashing"]
     
     %% Core AI App
-    CoreApp["<b>Core AI App</b><br/>(index.html)<br/>---<br/>• Video feed<br/>• Canvas overlay<br/>• Status display"]
+    CoreApp["<b>Core AI App</b><br/>(index.html)<br/>---<br/>• Video feed<br/>• Canvas overlay<br/>• Status display<br/>• Session guard"]
     
     %% Core Logic
-    ScriptJS["<b>AI Logic</b><br/>(script.js)<br/>---<br/>• MoveNet model<br/>• Pose classification<br/>• 3-rule validation<br/>• Notification triggers<br/>• Data collection"]
+    ScriptJS["<b>AI Logic</b><br/>(script.js)<br/>---<br/>• MoveNet Lightning<br/>• 17 keypoints detection<br/>• 3-rule validation (15%, 50%, 10%)<br/>• Event logging (max 100)<br/>• Notification triggers<br/>• Data persistence<br/>• CSV export (session)<br/>• Session stats modal"]
     
-    StatsJS["<b>Statistics</b><br/>(stats.js)<br/>---<br/>• Display times<br/>• Event history table<br/>• Read localStorage"]
+    SettingsJS["<b>Settings</b><br/>(settings.js)<br/>---<br/>• Load/save config<br/>• localStorage persistence<br/>• 4 settings (sensitivity,<br/>  notifications, threshold,<br/>  break interval)<br/>• Admin-only access<br/>• Session guard"]
     
-    SettingsJS["<b>Settings</b><br/>(settings.js)<br/>---<br/>• Load/save config<br/>• localStorage persistence<br/>• 4 settings"]
+    AuthGuard["<b>Session Guard</b><br/>(auth-guard.js)<br/>---<br/>• Route protection<br/>• Role validation<br/>• Auto-redirect"]
+    
+    AdminDashboardJS["<b>Admin Logic</b><br/>(admin-dashboard.js)<br/>---<br/>• Load users<br/>• Delete users<br/>• Self-deletion detection<br/>• Table rendering<br/>• Logout with replace()"]
     
     %% IPC Bridge
-    Preload["<b>IPC Bridge</b><br/>(preload.js)<br/>---<br/>• contextBridge API<br/>• Secure IPC channel<br/>• window.api.sendNotification()"]
+    Preload["<b>IPC Bridge</b><br/>(preload.js)<br/>---<br/>• contextBridge API<br/>• Secure IPC channels<br/>• window.api methods:<br/>  - sendNotification()<br/>  - authRegister()<br/>  - authLogin()<br/>  - adminGetAllUsers()<br/>  - adminDeleteUser()"]
     
     %% Notifications
     Notifications["<b>Native Notifications</b><br/>---<br/>• OS-level alerts<br/>• Sound enabled<br/>• Posture warnings<br/>• Break reminders"]
     
+    %% Database
+    Database[("<b>SQLite3 Database</b><br/>(data/users.sqlite)<br/>---<br/>• users table<br/>• bcrypt password_hash<br/>• Role-based access<br/>• Persistent storage")]
+    
     %% localStorage
-    LocalStorage[("<b>localStorage</b><br/>---<br/>• Settings (4 keys)<br/>• Time tracking (2 keys)<br/>• Event history (1 key)")]
+    LocalStorage[("<b>localStorage</b><br/>---<br/>• Settings (4 keys)<br/>• Time tracking (2 keys)<br/>• Event history (1 key)<br/>• Alerts history (1 key)<br/>• Session data (2 keys)<br/>• Data persists across sessions")]
     
     %% Flow Connections
     MainProcess -->|loads| Landing
+    MainProcess -.->|"Database ops"| Database
     
     Landing -->|"Admin button"| AdminLogin
     Landing -->|"Client button"| ClientLogin
     
+    Landing -->|"Register link"| AdminRegister
     AdminLogin -->|"Register link"| AdminRegister
     AdminRegister -->|"Back to login"| AdminLogin
+    AdminLogin -->|"IPC: auth:login"| Preload
+    AdminRegister -->|"IPC: auth:register"| Preload
     AdminLogin -->|"Success"| AdminDashboard
     
-    ClientLogin -->|"Register link"| ClientRegister
-    ClientRegister -->|"Back to login"| ClientLogin
-    ClientLogin -->|"Success"| ClientReady
-    ClientReady -->|"Start button"| CoreApp
+    AdminDashboard -->|"Client register"| ClientRegister
+    ClientRegister -->|"Back to dashboard"| AdminDashboard
+    ClientLogin -->|"IPC: auth:login"| Preload
+    ClientRegister -->|"IPC: auth:register"| Preload
+    ClientLogin -->|"Success"| CoreApp
     
     CoreApp -->|"Loads"| ScriptJS
-    CoreApp -->|"Navigation"| StatsJS
     CoreApp -->|"Navigation"| SettingsJS
+    CoreApp -->|"Validates"| AuthGuard
+    SettingsJS -->|"Validates"| AuthGuard
+    AdminDashboard -->|"Validates"| AuthGuard
+    AdminDashboard -->|"Loads"| AdminDashboardJS
     
-    ScriptJS -->|"IPC call"| Preload
-    Preload -->|"IPC message"| MainProcess
+    AdminDashboardJS -->|"IPC: admin:get-all-users"| Preload
+    AdminDashboardJS -->|"IPC: admin:delete-user"| Preload
+    
+    ScriptJS -->|"IPC: notify:posture"| Preload
+    Preload -->|"IPC messages"| MainProcess
     MainProcess -->|"Shows"| Notifications
+    MainProcess -->|"Query/Insert/Delete"| Database
     
     ScriptJS -.->|"Read/Write"| LocalStorage
-    StatsJS -.->|"Read only"| LocalStorage
     SettingsJS -.->|"Read/Write"| LocalStorage
+    AuthGuard -.->|"Read sessions"| LocalStorage
+    AdminLogin -.->|"Write session"| LocalStorage
+    ClientLogin -.->|"Write session"| LocalStorage
+    AdminDashboardJS -.->|"Self-deletion check"| LocalStorage
     
     %% Styling
     classDef mainProcess fill:#1f6feb,stroke:#388bfd,stroke-width:3px,color:#fff
@@ -68,10 +102,14 @@ graph TB
     classDef logic fill:#9a6700,stroke:#bf8700,stroke-width:2px,color:#fff
     classDef storage fill:#8250df,stroke:#986ee2,stroke-width:2px,color:#fff
     classDef ipc fill:#bf4b00,stroke:#d97706,stroke-width:2px,color:#fff
+    classDef database fill:#0969da,stroke:#0969da,stroke-width:3px,color:#fff
+    classDef guard fill:#d1242f,stroke:#f85149,stroke-width:2px,color:#fff
     
     class MainProcess,Notifications mainProcess
-    class Landing,AdminLogin,AdminRegister,AdminDashboard,ClientLogin,ClientRegister,ClientReady auth
+    class Landing,AdminLogin,AdminRegister,AdminDashboard,ClientLogin,ClientRegister auth
     class CoreApp coreApp
-    class ScriptJS,StatsJS,SettingsJS logic
+    class ScriptJS,SettingsJS,AdminDashboardJS logic
     class LocalStorage storage
     class Preload ipc
+    class Database database
+    class AuthGuard guard

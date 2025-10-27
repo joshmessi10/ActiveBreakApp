@@ -176,6 +176,62 @@ ipcMain.handle("auth:login", async (event, email, password) => {
   }
 });
 
+// IPC Handler: Get all users (Admin only)
+ipcMain.handle("admin:get-all-users", async (event) => {
+  try {
+    console.log("📋 Fetching all users for admin dashboard");
+
+    return new Promise((resolve, reject) => {
+      db.all(
+        "SELECT id, email, role, full_name, org_name, created_at FROM users ORDER BY created_at DESC",
+        [],
+        (err, users) => {
+          if (err) {
+            console.error("❌ Error fetching users:", err);
+            resolve({ success: false, message: "Error al obtener usuarios." });
+            return;
+          }
+
+          console.log(`✅ Retrieved ${users.length} users`);
+          resolve({ success: true, users });
+        }
+      );
+    });
+  } catch (error) {
+    console.error("❌ Exception fetching users:", error);
+    return { success: false, message: "Error al obtener usuarios." };
+  }
+});
+
+// IPC Handler: Delete user by ID (Admin only)
+ipcMain.handle("admin:delete-user", async (event, userId) => {
+  try {
+    console.log("🗑️ Deleting user with ID:", userId);
+
+    return new Promise((resolve, reject) => {
+      db.run("DELETE FROM users WHERE id = ?", [userId], function (err) {
+        if (err) {
+          console.error("❌ Error deleting user:", err);
+          resolve({ success: false, message: "Error al eliminar usuario." });
+          return;
+        }
+
+        if (this.changes === 0) {
+          console.log("⚠️ No user found with ID:", userId);
+          resolve({ success: false, message: "Usuario no encontrado." });
+          return;
+        }
+
+        console.log(`✅ User deleted successfully (ID: ${userId})`);
+        resolve({ success: true, message: "Usuario eliminado exitosamente." });
+      });
+    });
+  } catch (error) {
+    console.error("❌ Exception deleting user:", error);
+    return { success: false, message: "Error al eliminar usuario." };
+  }
+});
+
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1000,

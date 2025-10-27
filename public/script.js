@@ -467,81 +467,10 @@ function stopTimer() {
   clearInterval(timerInterval);
 }
 
-(function adminGate() {
-  const settingsLink = document.getElementById("nav-settings");
-  const modal = document.getElementById("admin-gate");
-  if (!settingsLink || !modal) return;
-
-  const form = document.getElementById("adminGateForm");
-  const emailEl = document.getElementById("gateEmail");
-  const passEl = document.getElementById("gatePass");
-  const msgEl = document.getElementById("gateMsg");
-
-  const LS_ACCOUNTS_KEY = "ab_org_accounts";
-
-  async function sha256(text) {
-    const enc = new TextEncoder().encode(text);
-    const buf = await crypto.subtle.digest("SHA-256", enc);
-    return [...new Uint8Array(buf)]
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-  }
-  function loadAccounts() {
-    try {
-      return JSON.parse(localStorage.getItem(LS_ACCOUNTS_KEY)) || [];
-    } catch {
-      return [];
-    }
-  }
-
-  function open() {
-    modal.setAttribute("aria-hidden", "false");
-    setTimeout(() => emailEl?.focus(), 50);
-  }
-  function close() {
-    modal.setAttribute("aria-hidden", "true");
-    form.reset();
-    msgEl.textContent = "";
-  }
-
-  // abrir modal en vez de navegar
-  settingsLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    open();
-  });
-
-  // cerrar si clic en backdrop o botón ✕
-  modal.addEventListener("click", (e) => {
-    if (e.target.hasAttribute("data-close")) close();
-  });
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    msgEl.textContent = "Verificando…";
-
-    const email = emailEl.value.trim().toLowerCase();
-    const pass = passEl.value;
-
-    const accs = loadAccounts();
-    const acc = accs.find((a) => a.email.toLowerCase() === email);
-    if (!acc) {
-      msgEl.textContent = "No existe una cuenta con ese correo.";
-      return;
-    }
-
-    const hash = await sha256(pass);
-    if (hash !== acc.passHash) {
-      msgEl.textContent = "Contraseña incorrecta.";
-      return;
-    }
-
-    // OK → navega a Ajustes
-    msgEl.textContent = "Acceso concedido. Abriendo Ajustes…";
-    setTimeout(() => {
-      window.location.href = "settings.html";
-    }, 250);
-  });
-})();
+// ===== DEPRECATED: Admin Gate Modal removed =====
+// Authentication is now handled by SQLite3 database with bcrypt encryption.
+// Session validation is enforced via auth-guard.js on protected pages.
+// See admin-welcome.html for the new admin dashboard with user management.
 
 // ===== Reset de sesión al iniciar la app (cada ejecución empieza en cero)
 /*
@@ -569,6 +498,10 @@ function stopTimer() {
   const kpiIncorrect = modal.querySelector("#kpi-incorrect");
   const kpiAlerts = modal.querySelector("#kpi-alerts");
   const btnExport = modal.querySelector("#stats-export");
+  const startDateInput = document.getElementById("startDate");
+  const endDateInput = document.getElementById("endDate");
+  const filterButton = document.getElementById("filterButton");
+  const resetButton = document.getElementById("resetButton");
 
   // Inicio de sesión (una sola vez por ejecución)
   if (!window.__AB_SESSION_T0) window.__AB_SESSION_T0 = Date.now();
@@ -593,12 +526,34 @@ function stopTimer() {
   }
 
   // Reconstruye tiempos de la SESIÓN a partir de eventos (desde __AB_SESSION_T0)
-  function computeSessionDurations() {
+  // Ahora acepta parámetros de filtrado de fecha opcionales
+  function computeSessionDurations(startDate = null, endDate = null) {
     const t0 = window.__AB_SESSION_T0;
-    const t1 = Date.now();
+    let t1 = Date.now();
+
+    // Si se proporciona endDate, usarlo como límite superior
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999); // Fin del día
+      t1 = Math.min(t1, endDateTime.getTime());
+    }
 
     // postureHistory está guardado NEWEST FIRST ⇒ lo invertimos
-    const hist = loadHistory().slice().reverse();
+    let hist = loadHistory().slice().reverse();
+
+    // Aplicar filtro de fecha de inicio si se proporciona
+    if (startDate) {
+      const startDateTime = new Date(startDate);
+      startDateTime.setHours(0, 0, 0, 0); // Inicio del día
+      hist = hist.filter((ev) => ev.timestamp >= startDateTime.getTime());
+    }
+
+    // Aplicar filtro de fecha de fin si se proporciona
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999); // Fin del día
+      hist = hist.filter((ev) => ev.timestamp <= endDateTime.getTime());
+    }
 
     // Estado al inicio de la sesión: si hay eventos previos a t0, tomamos el último;
     // si no, asumimos "Correcta" por defecto.
@@ -649,8 +604,11 @@ function stopTimer() {
     };
   }
 
-  function render() {
-    const { correct, incorrect, rows } = computeSessionDurations();
+  function render(startDate = null, endDate = null) {
+    const { correct, incorrect, rows } = computeSessionDurations(
+      startDate,
+      endDate
+    );
     const alerts = parseInt(localStorage.getItem("alertsCount") || "0", 10);
 
     kpiCorrect.textContent = hhmmss(correct);
@@ -658,21 +616,33 @@ function stopTimer() {
     kpiAlerts.textContent = String(alerts);
 
     tbody.innerHTML = "";
-    // más recientes arriba:
-    rows
-      .slice()
-      .reverse()
-      .forEach((r) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${r.time}</td><td>${r.type}</td>`;
-        tbody.appendChild(tr);
-      });
+
+    if (rows.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td colspan="2" style="text-align: center; color: #888;">No hay eventos en el rango seleccionado</td>';
+      tbody.appendChild(tr);
+    } else {
+      // más recientes arriba:
+      rows
+        .slice()
+        .reverse()
+        .forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${r.time}</td><td>${r.type}</td>`;
+          tbody.appendChild(tr);
+        });
+    }
   }
 
   function open() {
     modal.setAttribute("aria-hidden", "false");
-    render();
-    refreshTimer = setInterval(render, 1000);
+    render(null, null); // Render with no filters initially
+    refreshTimer = setInterval(() => {
+      const startDate = startDateInput.value || null;
+      const endDate = endDateInput.value || null;
+      render(startDate, endDate);
+    }, 1000);
   }
   function close() {
     modal.setAttribute("aria-hidden", "true");
@@ -689,6 +659,24 @@ function stopTimer() {
   modal.addEventListener("click", (e) => {
     if (e.target.hasAttribute("data-close")) close();
   });
+
+  // Filter button event listener
+  if (filterButton) {
+    filterButton.addEventListener("click", () => {
+      const startDate = startDateInput.value || null;
+      const endDate = endDateInput.value || null;
+      render(startDate, endDate);
+    });
+  }
+
+  // Reset button event listener
+  if (resetButton) {
+    resetButton.addEventListener("click", () => {
+      startDateInput.value = "";
+      endDateInput.value = "";
+      render(null, null);
+    });
+  }
 
   btnExport.addEventListener("click", () => {
     const hist = loadHistory().filter(
@@ -734,3 +722,15 @@ window.addEventListener("DOMContentLoaded", () => {
     console.error("❌ IPC bridge NOT available! Notifications will not work.");
   }
 });
+
+// Logout function for user dashboard
+function logout() {
+  try {
+    localStorage.removeItem("ab_current_client");
+    // Use replace() to prevent back button issues
+    window.location.replace("landing.html");
+  } catch (e) {
+    console.error("Error during logout:", e);
+    window.location.replace("landing.html");
+  }
+}

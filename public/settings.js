@@ -69,3 +69,15 @@ saveSettingsButton.addEventListener("click", saveSettings);
 
 // 📥 Load settings on page load
 window.addEventListener("DOMContentLoaded", loadSettings);
+
+// Logout function - only for admin (settings is admin-only now)
+function logout() {
+  try {
+    localStorage.removeItem("ab_current_user");
+    // Use replace() to prevent back button issues
+    window.location.replace("landing.html");
+  } catch (e) {
+    console.error("Error during logout:", e);
+    window.location.replace("landing.html");
+  }
+}

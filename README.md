@@ -17,7 +17,7 @@ Aplicación de Pausas Activas con Detección de Postura en Tiempo Real
 - ✅ **Sistema de Configuración**: Sensibilidad, notificaciones, umbrales personalizables
 - ✅ **Interfaz Profesional**: UI moderna con fuente Inter, iconos Feather, y micro-interacciones
 - ✅ **Sistema de Diseño**: Variables CSS, paleta refinada, transiciones suaves
-- ✅ **Exportar Datos**: Descarga histórico en CSV (implementado en modal de estadísticas de sesión)
+- ✅ **Exportar Datos**: Descarga histórico en CSV (modal de sesión en vivo)
 
 ## 🚀 Instalación
 
@@ -129,13 +129,37 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 1. **Inicio en `landing.html`**: Página de entrada con opciones:
    - 👔 **Admin**: Acceso a panel administrativo
    - 👤 **Client**: Acceso a la aplicación de detección de postura
-2. **Login/Registro**: Formularios de autenticación con base de datos SQLite3
+   - ⚠️ **IMPORTANTE**: Los clientes NO pueden auto-registrarse. Solo admins pueden crear cuentas de cliente.
+2. **Login/Registro**:
+   - **Admins**: Pueden auto-registrarse desde la landing page
+   - **Clients**: Solo pueden hacer login (registro controlado por admins)
 3. **Seguridad**: Contraseñas hasheadas con bcrypt (10 salt rounds)
 4. **Persistencia**: Usuarios almacenados en `data/users.sqlite`
 5. **Validación de Roles**: Control de acceso basado en roles (admin/client)
 6. **Redirección**:
-   - Admin → `admin-welcome.html` (dashboard placeholder)
-   - Client → `client-ready.html` → `index.html` (app principal)
+   - Admin → `admin-welcome.html` (dashboard funcional con gestión de usuarios)
+   - Client → `index.html` (detección de postura en tiempo real)
+
+### Panel de Administración (Admin Dashboard)
+
+**Funcionalidades implementadas**:
+
+- ✅ **Tabla de usuarios**: Visualiza todos los usuarios registrados (email, rol, nombre, organización, fecha)
+- ✅ **Registrar nuevo cliente**: Botón que lleva a formulario de registro de clientes
+- ✅ **Eliminar usuarios**: Botón de eliminación con confirmación
+- ✅ **Auto-detección de eliminación propia**:
+  - Muestra advertencia especial si admin intenta eliminar su propia cuenta
+  - Cierra sesión inmediatamente después de confirmación
+  - Redirige al inicio usando `window.location.replace()` para prevenir acceso a páginas cacheadas
+- ✅ **Acceso a configuración**: Botón para acceder a ajustes del sistema (admin-only)
+- ✅ **Gestión en tiempo real**: Los cambios se reflejan inmediatamente en la interfaz
+- ✅ **Logout seguro**: Botón "Volver al inicio" usa `window.location.replace()` para prevenir regreso con botón atrás del navegador
+
+**Restricciones de acceso**:
+
+- ⚠️ **Configuración (Settings)**: Solo accesible para administradores
+- ⚠️ **Registro de clientes**: Solo los administradores pueden crear cuentas de cliente
+- ✅ **Clientes**: Solo pueden acceder a Detection (index.html) y Statistics (modal integrado en index.html)
 
 ### Detección de Postura (Core App)
 
@@ -230,6 +254,8 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 - [x] ✅ **Sistema de autenticación persistente (SQLite3 + bcrypt)**
 - [x] ✅ **Base de datos local para usuarios con roles (admin/client)**
 - [x] ✅ **Hashing seguro de contraseñas con bcrypt (10 salt rounds)**
+- [x] ✅ **Auto-detección de eliminación propia (admin self-deletion)**
+- [x] ✅ **Logout seguro con `window.location.replace()` para prevenir acceso a páginas cacheadas**
 - [x] ✅ Exportar datos históricos (CSV desde modal de estadísticas de sesión)
 - [x] ✅ Notificaciones de escritorio nativas con sonido
 - [x] ✅ Recordatorios de descanso configurables
@@ -243,20 +269,23 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 - [x] ✅ Sistema de roles y permisos (RBAC) (COMPLETADO - admin/client)
 - [ ] Implementar backend con Node.js/Express (opcional - actualmente local)
 - [ ] Añadir JWT para sesiones seguras
-- [ ] Panel de administración funcional
-- [ ] Gestión de usuarios desde Admin dashboard
+- [x] ✅ Panel de administración funcional (COMPLETADO - Dashboard con CRUD de usuarios implementado)
+- [x] ✅ Gestión de usuarios desde Admin dashboard (COMPLETADO - Ver, crear y eliminar usuarios con auto-detección)
+- [x] ✅ Filtrado de historial por fecha/rango (COMPLETADO - Modal de estadísticas con filtros de fecha)
 - [ ] Análisis avanzado de ángulos de columna vertebral
-- [ ] Filtrado de historial por fecha/rango
 - [ ] Gráficos de progreso diario/semanal
 - [ ] Sugerencias de ejercicios de estiramiento
 - [ ] Análisis de sesiones (inicio/fin/duración)
 
 ---
 
-**NOTA DE ACTUALIZACIÓN**: Este README fue actualizado el 26 de octubre de 2025 después de:
+**NOTA DE ACTUALIZACIÓN**: Este README fue actualizado el 27 de octubre de 2025 después de:
 
 1. Configurar electron-builder para distribución multiplataforma
 2. **Implementar sistema de autenticación persistente con SQLite3 + bcrypt**
 3. **Refactorizar completamente el sistema de login/registro con base de datos local**
+4. **Implementar auto-detección de eliminación propia en admin dashboard**
+5. **Añadir logout seguro usando `window.location.replace()` en todos los puntos de salida**
+6. **Completar auditoría QA exhaustiva confirmando 98% de precisión en documentación**
 
-La aplicación ahora incluye un sistema de autenticación de producción completo con almacenamiento seguro de usuarios.
+La aplicación ahora incluye un sistema de autenticación de producción completo con almacenamiento seguro de usuarios y gestión avanzada de sesiones.

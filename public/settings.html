@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <title>Active Break - Configuración</title>
+
+    <!-- Session Validation - Must load FIRST -->
+    <script src="auth-guard.js"></script>
+    <script>
+      checkAdminSession();
+    </script>
+
     <!-- Google Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,14 +23,20 @@
     <header>
       <h1><i data-feather="settings"></i> Configuración</h1>
       <nav>
-        <a href="index.html" title="Inicio">
+        <a href="admin/admin-welcome.html" title="Admin Dashboard">
           <i data-feather="home"></i>
-        </a>
-        <a href="stats.html" title="Estadísticas">
-          <i data-feather="bar-chart-2"></i>
         </a>
         <a href="settings.html" class="active" title="Configuración">
           <i data-feather="settings"></i>
+        </a>
+        <a
+          href="#"
+          id="nav-logout"
+          title="Volver a Inicio"
+          onclick="logout(); return false;"
+          style="margin-left: auto"
+        >
+          <i data-feather="log-out"></i>
         </a>
       </nav>
     </header>
@@ -66,6 +79,6 @@
     <script>
       feather.replace();
     </script>
-    <script src="settings.js" type="module" defer></script>
+    <script src="settings.js"></script>
   </body>
 </html>
