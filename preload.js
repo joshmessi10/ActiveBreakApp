@@ -1,14 +1,6 @@
-// preload.js (ESM)
-import { contextBridge, ipcRenderer } from "electron";
+// preload.js (CommonJS - Required for Electron preload scripts)
+const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("api", {
-  notify: (message) => ipcRenderer.invoke("notify", message),
-  settings: {
-    get: () => ipcRenderer.invoke("settings:get"),
-    set: (partial) => ipcRenderer.invoke("settings:set", partial),
-  },
-  stats: {
-    add: (entry) => ipcRenderer.invoke("stats:add", entry),
-    all: () => ipcRenderer.invoke("stats:all"),
-  },
+  sendNotification: (message) => ipcRenderer.send("notify:posture", message),
 });
