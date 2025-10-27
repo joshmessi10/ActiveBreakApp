@@ -34,6 +34,9 @@ let lastBreakNotificationTime = 0;
 let lastPostureState = "correct"; // Track previous state to detect changes
 const statusText = postureDetail;
 
+// 📊 Chart.js Global
+let myPostureChart = null;
+
 function setPosture(isGood) {
   if (isGood) {
     postureCard.classList.add("correct");
@@ -510,11 +513,16 @@ function stopTimer() {
   const endDateInput = document.getElementById("endDate");
   const filterButton = document.getElementById("filterButton");
   const resetButton = document.getElementById("resetButton");
+  const prevPageBtn = document.getElementById("prevPage");
+  const nextPageBtn = document.getElementById("nextPage");
+  const pageInfo = document.getElementById("pageInfo");
 
   // Inicio de sesión (una sola vez por ejecución)
   if (!window.__AB_SESSION_T0) window.__AB_SESSION_T0 = Date.now();
 
   let refreshTimer = null;
+  let currentPage = 1;
+  const rowsPerPage = 20;
 
   function pad(n) {
     return String(n).padStart(2, "0");
@@ -602,6 +610,7 @@ function stopTimer() {
         time: new Date(ev.timestamp).toLocaleTimeString(),
         type: ev.type,
         duration: hhmmss(Math.max(0, Math.floor((next - ev.timestamp) / 1000))),
+        timestamp: ev.timestamp, // Include timestamp for chart processing
       };
     });
 
@@ -609,6 +618,63 @@ function stopTimer() {
       correct: Math.max(0, Math.floor(correct)),
       incorrect: Math.max(0, Math.floor(incorrect)),
       rows,
+    };
+  }
+
+  // 📊 Process history data for Chart.js visualization
+  function processHistoryForChart(rows) {
+    // Group events by day and calculate total minutes for each posture type
+    const dailyData = {};
+
+    rows.forEach((row) => {
+      // Extract date from timestamp
+      const date = new Date(row.timestamp).toLocaleDateString("es-ES", {
+        month: "short",
+        day: "numeric",
+      });
+
+      if (!dailyData[date]) {
+        dailyData[date] = { correcta: 0, incorrecta: 0 };
+      }
+
+      // Parse duration (format: HH:MM:SS)
+      const [hours, minutes, seconds] = row.duration.split(":").map(Number);
+      const totalMinutes = hours * 60 + minutes + seconds / 60;
+
+      if (row.type === "Correcta") {
+        dailyData[date].correcta += totalMinutes;
+      } else {
+        dailyData[date].incorrecta += totalMinutes;
+      }
+    });
+
+    // Convert to Chart.js format
+    const labels = Object.keys(dailyData);
+    const correctData = labels.map((label) =>
+      Math.round(dailyData[label].correcta)
+    );
+    const incorrectData = labels.map((label) =>
+      Math.round(dailyData[label].incorrecta)
+    );
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Postura Correcta",
+          data: correctData,
+          backgroundColor: "rgba(46, 160, 67, 0.8)",
+          borderColor: "rgba(46, 160, 67, 1)",
+          borderWidth: 1,
+        },
+        {
+          label: "Postura Incorrecta",
+          data: incorrectData,
+          backgroundColor: "rgba(225, 29, 72, 0.8)",
+          borderColor: "rgba(225, 29, 72, 1)",
+          borderWidth: 1,
+        },
+      ],
     };
   }
 
@@ -623,6 +689,63 @@ function stopTimer() {
     kpiIncorrect.textContent = hhmmss(incorrect);
     kpiAlerts.textContent = String(alerts);
 
+    // 📊 Update Chart
+    const chartData = processHistoryForChart(rows);
+
+    const ctx = document.getElementById("postureChart");
+    if (ctx && typeof Chart !== "undefined") {
+      // If chart exists, just update its data (no animation)
+      if (myPostureChart) {
+        myPostureChart.data.labels = chartData.labels;
+        myPostureChart.data.datasets = chartData.datasets;
+        myPostureChart.update("none"); // 'none' disables animation
+      } else {
+        // Create chart only once
+        myPostureChart = new Chart(ctx.getContext("2d"), {
+          type: "bar",
+          data: chartData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            animation: {
+              duration: 750, // Only animate on initial creation
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: "Tiempo por Postura (Minutos)",
+                font: { size: 16, weight: "bold" },
+              },
+              legend: {
+                display: true,
+                position: "top",
+              },
+            },
+            scales: {
+              x: {
+                stacked: true,
+                title: {
+                  display: true,
+                  text: "Fecha",
+                },
+              },
+              y: {
+                stacked: true,
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: "Tiempo (minutos)",
+                },
+                ticks: {
+                  callback: (value) => `${value} min`,
+                },
+              },
+            },
+          },
+        });
+      }
+    }
+
     tbody.innerHTML = "";
 
     if (rows.length === 0) {
@@ -630,21 +753,48 @@ function stopTimer() {
       tr.innerHTML =
         '<td colspan="2" style="text-align: center; color: #888;">No hay eventos en el rango seleccionado</td>';
       tbody.appendChild(tr);
+      // Hide pagination when no data
+      if (prevPageBtn) prevPageBtn.style.display = "none";
+      if (nextPageBtn) nextPageBtn.style.display = "none";
+      if (pageInfo) pageInfo.style.display = "none";
     } else {
       // más recientes arriba:
-      rows
-        .slice()
-        .reverse()
-        .forEach((r) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${r.time}</td><td>${r.type}</td>`;
-          tbody.appendChild(tr);
-        });
+      const reversedRows = rows.slice().reverse();
+      const totalPages = Math.ceil(reversedRows.length / rowsPerPage);
+
+      // Ensure currentPage is within bounds
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const startIdx = (currentPage - 1) * rowsPerPage;
+      const endIdx = startIdx + rowsPerPage;
+      const pageRows = reversedRows.slice(startIdx, endIdx);
+
+      pageRows.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${r.time}</td><td>${r.type}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      // Update pagination controls
+      if (pageInfo) {
+        pageInfo.textContent = `Página ${currentPage} de ${totalPages} (${reversedRows.length} eventos)`;
+        pageInfo.style.display = "inline";
+      }
+      if (prevPageBtn) {
+        prevPageBtn.disabled = currentPage === 1;
+        prevPageBtn.style.display = "inline-block";
+      }
+      if (nextPageBtn) {
+        nextPageBtn.disabled = currentPage === totalPages;
+        nextPageBtn.style.display = "inline-block";
+      }
     }
   }
 
   function open() {
     modal.setAttribute("aria-hidden", "false");
+    currentPage = 1; // Reset to first page when opening modal
     render(null, null); // Render with no filters initially
     refreshTimer = setInterval(() => {
       const startDate = startDateInput.value || null;
@@ -671,6 +821,7 @@ function stopTimer() {
   // Filter button event listener
   if (filterButton) {
     filterButton.addEventListener("click", () => {
+      currentPage = 1; // Reset to first page when applying filters
       const startDate = startDateInput.value || null;
       const endDate = endDateInput.value || null;
       render(startDate, endDate);
@@ -682,7 +833,29 @@ function stopTimer() {
     resetButton.addEventListener("click", () => {
       startDateInput.value = "";
       endDateInput.value = "";
+      currentPage = 1; // Reset to first page
       render(null, null);
+    });
+  }
+
+  // Pagination button event listeners
+  if (prevPageBtn) {
+    prevPageBtn.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        const startDate = startDateInput.value || null;
+        const endDate = endDateInput.value || null;
+        render(startDate, endDate);
+      }
+    });
+  }
+
+  if (nextPageBtn) {
+    nextPageBtn.addEventListener("click", () => {
+      currentPage++;
+      const startDate = startDateInput.value || null;
+      const endDate = endDateInput.value || null;
+      render(startDate, endDate);
     });
   }
 

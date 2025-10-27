@@ -23,6 +23,8 @@
     <!-- MediaPipe Pose Detection -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
   </head>
   <body>
     <header>
@@ -168,6 +170,11 @@
           </div>
         </div>
 
+        <!-- Chart Container for Analytics -->
+        <div class="chart-container" style="width: 100%; margin-bottom: 20px">
+          <canvas id="postureChart"></canvas>
+        </div>
+
         <!-- Date Range Filter Controls -->
         <div class="stats-filters">
           <div class="filter-group">
@@ -198,6 +205,18 @@
               <!-- JS -->
             </tbody>
           </table>
+        </div>
+
+        <div class="pagination-controls">
+          <button type="button" id="prevPage" class="btn btn-secondary">
+            ← Anterior
+          </button>
+          <span id="pageInfo" style="margin: 0 1rem; font-weight: 500"
+            >Página 1 de 1</span
+          >
+          <button type="button" id="nextPage" class="btn btn-secondary">
+            Siguiente →
+          </button>
         </div>
 
         <div class="stats-actions">

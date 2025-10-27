@@ -441,6 +441,18 @@ main {
 .stats-table-wrap {
   margin-top: 6px;
 }
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 8px 0;
+}
+.pagination-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .stats-actions {
   display: flex;
   gap: 10px;
