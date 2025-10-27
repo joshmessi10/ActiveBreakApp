@@ -4,7 +4,7 @@ Aplicación de Pausas Activas con Detección de Postura en Tiempo Real
 
 ## 🎯 Características
 
-- ✅ **Sistema de Autenticación (Mockup)**: Flujo Admin/Client con login y registro (UI only, in-memory)
+- ✅ **Sistema de Autenticación Persistente**: Flujo Admin/Client con SQLite3 + bcrypt (producción)
 - ✅ **Detección de Postura en Tiempo Real**: Usando MoveNet (TensorFlow.js)
 - ✅ **Visualización de Skeleton**: Overlay profesional con 17 puntos clave
 - ✅ **Análisis Militar-Grade**: 3 reglas estrictas (alineación horizontal 15%, vertical 50%, simetría de hombros 10%)
@@ -27,6 +27,7 @@ Clonar Proyecto: Ir a la carpeta y ejecutar con cmd
 npm init -y
 npm install electron --save-dev
 npm install @tensorflow/tfjs @mediapipe/pose
+npm install sqlite3 bcrypt
 npm install electron-builder --save-dev
 ```
 
@@ -71,11 +72,13 @@ El comando `npm run build` puede mostrar errores relacionados con "Cannot create
 
 **Solución temporal**: Los errores ocurren por permisos de Windows con symbolic links en las herramientas de code-signing. El build funciona correctamente para desarrollo y distribución local.
 
-## �🛠️ Tecnologías
+## 🛠️ Tecnologías
 
 - **Electron** v38.4.0 - Desktop app framework
 - **TensorFlow.js** v4.22.0 - Machine learning
 - **MoveNet Lightning** - Ultra-fast pose detection
+- **SQLite3** v5.1.7 - Local database for user authentication
+- **bcrypt** v6.0.0 - Secure password hashing
 - **ES6 Modules** - Modern JavaScript
 - **Inter Font** - Professional typography
 - **Feather Icons** - Clean, modern iconography
@@ -83,7 +86,7 @@ El comando `npm run build` puede mostrar errores relacionados con "Cannot create
 
 ## 📊 Estado del Proyecto
 
-**Versión**: 9.0  
+**Versión**: 10.0  
 **Estado**: Production Ready - Fully Distributable! 🎉
 
 **Componentes**:
@@ -93,7 +96,7 @@ El comando `npm run build` puede mostrar errores relacionados con "Cannot create
 - ✅ Desktop Notifications & Break Reminders (Fully Functional)
 - ✅ Cross-Session Data Persistence (Statistics & History Saved)
 - ✅ Build & Distribution Configuration (electron-builder with multi-platform support)
-- 🎭 Authentication System (UI Mockup - In-Memory, No Database)
+- ✅ **Production Authentication System (SQLite3 + bcrypt - Fully Implemented)**
 
 Ver `project-purpose.md` para más detalles técnicos.
 
@@ -121,13 +124,16 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 
 ## 🎮 Cómo Funciona
 
-### Flujo de Autenticación (Nuevo)
+### Flujo de Autenticación (Persistente con SQLite3)
 
 1. **Inicio en `landing.html`**: Página de entrada con opciones:
-   - 👔 **Admin**: Acceso a panel administrativo (mockup)
+   - 👔 **Admin**: Acceso a panel administrativo
    - 👤 **Client**: Acceso a la aplicación de detección de postura
-2. **Login/Registro**: Formularios de autenticación (solo UI, sin base de datos)
-3. **Redirección**:
+2. **Login/Registro**: Formularios de autenticación con base de datos SQLite3
+3. **Seguridad**: Contraseñas hasheadas con bcrypt (10 salt rounds)
+4. **Persistencia**: Usuarios almacenados en `data/users.sqlite`
+5. **Validación de Roles**: Control de acceso basado en roles (admin/client)
+6. **Redirección**:
    - Admin → `admin-welcome.html` (dashboard placeholder)
    - Client → `client-ready.html` → `index.html` (app principal)
 
@@ -221,7 +227,9 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 - [x] ✅ Micro-interacciones y animaciones suaves
 - [x] ✅ Detección military-grade con 3 reglas estrictas (15%, 50%, 10%)
 - [x] ✅ Sistema de feedback inteligente con mensajes específicos
-- [x] ✅ Sistema de autenticación Admin/Client (mockup UI)
+- [x] ✅ **Sistema de autenticación persistente (SQLite3 + bcrypt)**
+- [x] ✅ **Base de datos local para usuarios con roles (admin/client)**
+- [x] ✅ **Hashing seguro de contraseñas con bcrypt (10 salt rounds)**
 - [x] ✅ Exportar datos históricos (CSV desde modal de estadísticas de sesión)
 - [x] ✅ Notificaciones de escritorio nativas con sonido
 - [x] ✅ Recordatorios de descanso configurables
@@ -230,11 +238,11 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 
 ### 🔮 **Mejoras Futuras**
 
-- [ ] Conectar login a base de datos real
-- [ ] Implementar backend con Node.js/Express
+- [x] ✅ Conectar login a base de datos real (COMPLETADO - SQLite3)
+- [x] ✅ Hash de contraseñas con bcrypt (COMPLETADO)
+- [x] ✅ Sistema de roles y permisos (RBAC) (COMPLETADO - admin/client)
+- [ ] Implementar backend con Node.js/Express (opcional - actualmente local)
 - [ ] Añadir JWT para sesiones seguras
-- [ ] Sistema de roles y permisos (RBAC)
-- [ ] Hash de contraseñas con bcrypt
 - [ ] Panel de administración funcional
 - [ ] Gestión de usuarios desde Admin dashboard
 - [ ] Análisis avanzado de ángulos de columna vertebral
@@ -245,4 +253,10 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 
 ---
 
-**NOTA DE ACTUALIZACIÓN**: Este README fue actualizado el 26 de octubre de 2025 después de configurar electron-builder para distribución multiplataforma. La aplicación ahora puede ser empaquetada para Windows, macOS y Linux con un solo comando.
+**NOTA DE ACTUALIZACIÓN**: Este README fue actualizado el 26 de octubre de 2025 después de:
+
+1. Configurar electron-builder para distribución multiplataforma
+2. **Implementar sistema de autenticación persistente con SQLite3 + bcrypt**
+3. **Refactorizar completamente el sistema de login/registro con base de datos local**
+
+La aplicación ahora incluye un sistema de autenticación de producción completo con almacenamiento seguro de usuarios.

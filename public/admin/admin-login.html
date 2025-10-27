@@ -1,146 +1,198 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ActiveBreak — Login Admin</title>
-  <link rel="stylesheet" href="../style.css" />
-  <style>
-    .auth-wrap { min-height: 100vh; display:grid; place-items:center; padding:32px; }
-    .card { width:min(520px, 92vw); background:#fff; border-radius:16px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.07); }
-    .card h1 { margin:0 0 16px; font-size:28px; }
-    .row { display:grid; gap:10px; margin-bottom:14px; }
-    label { font-weight:600; font-size:14px; }
-    input { border:1px solid #cbd5e1; border-radius:10px; padding:12px; font-size:15px; width:100%; }
-    .btn { border:0; border-radius:12px; padding:12px 16px; font-weight:700; background:#4f46e5; color:#fff; cursor:pointer; width:100%; }
-    .btn:disabled{ opacity:.6; cursor:not-allowed; }
-    .muted { color:#64748b; font-size:14px; }
-    .error { color:#dc2626; font-size:14px; margin-top:6px; }
-    .ok { color:#16a34a; font-size:14px; margin-top:6px; }
-    a { color:#2563eb; text-decoration:underline; }
-  </style>
-</head>
-<body>
-  <main class="auth-wrap">
-    <section class="card">
-      <h1>Ingreso de Administrador</h1>
-      <p class="muted" id="info">Usa tu correo de administrador para continuar.</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActiveBreak — Login Admin</title>
+    <link rel="stylesheet" href="../style.css" />
+    <style>
+      .auth-wrap {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+      }
+      .card {
+        width: min(520px, 92vw);
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+      }
+      .card h1 {
+        margin: 0 0 16px;
+        font-size: 28px;
+      }
+      .row {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      label {
+        font-weight: 600;
+        font-size: 14px;
+      }
+      input {
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 15px;
+        width: 100%;
+      }
+      .btn {
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-weight: 700;
+        background: #4f46e5;
+        color: #fff;
+        cursor: pointer;
+        width: 100%;
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .muted {
+        color: #64748b;
+        font-size: 14px;
+      }
+      .error {
+        color: #dc2626;
+        font-size: 14px;
+        margin-top: 6px;
+      }
+      .ok {
+        color: #16a34a;
+        font-size: 14px;
+        margin-top: 6px;
+      }
+      a {
+        color: #2563eb;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="auth-wrap">
+      <section class="card">
+        <h1>Ingreso de Administrador</h1>
+        <p class="muted" id="info">
+          Usa tu correo de administrador para continuar.
+        </p>
 
-      <form id="loginForm" class="row" autocomplete="on">
-        <div class="row">
-          <label for="email">Correo</label>
-          <input id="email" type="email" required placeholder="admin@tu-org.com" />
-        </div>
-        <div class="row">
-          <label for="password">Contraseña</label>
-          <input id="password" type="password" required placeholder="••••••••" />
-        </div>
-        <button class="btn" id="loginBtn" type="submit">Ingresar</button>
-        <div id="message"></div>
-      </form>
+        <form id="loginForm" class="row" autocomplete="on">
+          <div class="row">
+            <label for="email">Correo</label>
+            <input
+              id="email"
+              type="email"
+              required
+              placeholder="admin@tu-org.com"
+            />
+          </div>
+          <div class="row">
+            <label for="password">Contraseña</label>
+            <input
+              id="password"
+              type="password"
+              required
+              placeholder="••••••••"
+            />
+          </div>
+          <button class="btn" id="loginBtn" type="submit">Ingresar</button>
+          <div id="message"></div>
+        </form>
 
-      <p class="muted" style="margin-top:8px;">
-        ¿No tienes cuenta?
-        <a href="./admin-register.html">Registrar organización</a>
-      </p>
-    </section>
-  </main>
+        <p class="muted" style="margin-top: 8px">
+          ¿No tienes cuenta?
+          <a href="./admin-register.html">Registrar organización</a>
+        </p>
+      </section>
+    </main>
 
-  <script>
-    // --- Utilidades de almacenamiento ---
-    const LS_ACCOUNTS_KEY = "ab_org_accounts";
-    const LS_CURRENT_USER = "ab_current_user";
+    <script>
+      const LS_CURRENT_USER = "ab_current_user";
 
-    async function sha256(text) {
-      const enc = new TextEncoder().encode(text);
-      const buf = await crypto.subtle.digest("SHA-256", enc);
-      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
-    }
+      function setMessage(text, ok = false) {
+        const el = document.getElementById("message");
+        el.className = ok ? "ok" : "error";
+        el.textContent = text;
+      }
 
-    function loadAccounts() {
-      try { return JSON.parse(localStorage.getItem(LS_ACCOUNTS_KEY)) || []; }
-      catch { return []; }
-    }
-    function saveAccounts(list) {
-      localStorage.setItem(LS_ACCOUNTS_KEY, JSON.stringify(list));
-    }
+      function prefillFromQuery() {
+        const q = new URLSearchParams(location.search);
+        const mail = q.get("email");
+        if (mail) document.getElementById("email").value = mail;
+        const created = q.get("created");
+        if (created === "1") {
+          setMessage("Registro exitoso. Ahora inicia sesión.", true);
+        }
+      }
 
-    // Seed de cuenta demo (solo si no existe)
-    async function ensureSeed() {
-      const seedEmail = "admin@activebreak.local";
-      const seedPass = "Admin!234";
-      const seedOrg  = "Demo Labs";
-      const accs = loadAccounts();
-      if (!accs.some(a => a.email.toLowerCase() === seedEmail)) {
-        accs.push({
-          email: seedEmail,
-          passHash: await sha256(seedPass),
-          orgName: seedOrg,
-          role: "admin",
-          createdAt: Date.now()
+      document.addEventListener("DOMContentLoaded", async () => {
+        prefillFromQuery();
+
+        const form = document.getElementById("loginForm");
+        const btn = document.getElementById("loginBtn");
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          setMessage("");
+          btn.disabled = true;
+
+          const email = document
+            .getElementById("email")
+            .value.trim()
+            .toLowerCase();
+          const pass = document.getElementById("password").value;
+
+          try {
+            // Call IPC handler to authenticate
+            const result = await window.api.authLogin(email, pass);
+
+            if (!result.success) {
+              setMessage(result.message);
+              btn.disabled = false;
+              return;
+            }
+
+            // Verify that the logged-in user has admin role
+            if (result.user.role !== "admin") {
+              setMessage("Esta cuenta no tiene permisos de administrador.");
+              btn.disabled = false;
+              return;
+            }
+
+            // Save session info to localStorage
+            localStorage.setItem(
+              LS_CURRENT_USER,
+              JSON.stringify({
+                email: result.user.email,
+                orgName: result.user.orgName,
+                role: result.user.role,
+                loginAt: Date.now(),
+              })
+            );
+
+            // Send notification
+            try {
+              window.api?.sendNotification(
+                "Inicio de sesión correcto. ¡Bienvenido!"
+              );
+            } catch (e) {}
+
+            setMessage("Acceso concedido. Redirigiendo…", true);
+            setTimeout(() => {
+              window.location.href = "./admin-welcome.html";
+            }, 400);
+          } catch (error) {
+            console.error("Login error:", error);
+            setMessage("Error al iniciar sesión. Intenta de nuevo.");
+            btn.disabled = false;
+          }
         });
-        saveAccounts(accs);
-        console.log("Cuenta demo creada:", seedEmail);
-      }
-    }
-
-    function setMessage(text, ok=false) {
-      const el = document.getElementById("message");
-      el.className = ok ? "ok" : "error";
-      el.textContent = text;
-    }
-
-    // Prefill email si viene desde register
-    function prefillFromQuery() {
-      const q = new URLSearchParams(location.search);
-      const mail = q.get("email");
-      if (mail) document.getElementById("email").value = mail;
-      const created = q.get("created");
-      if (created === "1") {
-        setMessage("Registro exitoso. Ahora inicia sesión.", true);
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", async () => {
-      await ensureSeed();
-      prefillFromQuery();
-
-      const form = document.getElementById("loginForm");
-      const btn  = document.getElementById("loginBtn");
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        setMessage("");
-        btn.disabled = true;
-
-        const email = document.getElementById("email").value.trim().toLowerCase();
-        const pass  = document.getElementById("password").value;
-
-        const accs = loadAccounts();
-        const acc = accs.find(a => a.email.toLowerCase() === email);
-        if (!acc) {
-          setMessage("No existe una cuenta con ese correo.");
-          btn.disabled = false; return;
-        }
-
-        const hash = await sha256(pass);
-        if (hash !== acc.passHash) {
-          setMessage("Contraseña incorrecta.");
-          btn.disabled = false; return;
-        }
-
-        // Guardar sesión actual y redirigir
-        localStorage.setItem(LS_CURRENT_USER, JSON.stringify({
-          email: acc.email, orgName: acc.orgName, role: acc.role || "admin", loginAt: Date.now()
-        }));
-
-        // Notificación en Electron (si está disponible)
-        try { window.api?.sendNotification?.("Inicio de sesión correcto. ¡Bienvenido!"); } catch(e){}
-
-        setMessage("Acceso concedido. Redirigiendo…", true);
-        setTimeout(() => { window.location.href = "./admin-welcome.html"; }, 400);
       });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

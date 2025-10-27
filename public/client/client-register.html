@@ -1,119 +1,209 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ActiveBreak — Registro de Cliente</title>
-  <link rel="stylesheet" href="../style.css"/>
-  <style>
-    .auth-wrap { min-height:100vh; display:grid; place-items:center; padding:32px; }
-    .card { width:min(640px, 92vw); background:#fff; border-radius:16px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.07); }
-    .card h1 { margin:0 0 10px; font-size:28px; }
-    .row { display:grid; gap:10px; margin-bottom:14px; }
-    label { font-weight:600; font-size:14px; }
-    input { border:1px solid #cbd5e1; border-radius:10px; padding:12px; font-size:15px; width:100%; }
-    .btn { border:0; border-radius:12px; padding:12px 16px; font-weight:700; background:#4f46e5; color:#fff; cursor:pointer; width:100%; }
-    .muted { color:#64748b; font-size:14px; }
-    .error { color:#dc2626; font-size:14px; margin-top:6px; }
-    .ok { color:#16a34a; font-size:14px; margin-top:6px; }
-    .two { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    @media (max-width:720px){ .two{ grid-template-columns:1fr; } }
-  </style>
-</head>
-<body>
-  <main class="auth-wrap">
-    <section class="card">
-      <h1>Registrar Cliente</h1>
-      <p class="muted">Crea una cuenta de usuario para usar ActiveBreak.</p>
-
-      <form id="regForm" autocomplete="off">
-        <div class="row">
-          <label for="fullName">Nombre completo</label>
-          <input id="fullName" type="text" required placeholder="Nombre y apellido" />
-        </div>
-        <div class="row">
-          <label for="email">Correo</label>
-          <input id="email" type="email" required placeholder="usuario@empresa.com" />
-        </div>
-        <div class="row">
-          <label for="org">Organización (opcional)</label>
-          <input id="org" type="text" placeholder="Mi Empresa S.A.S." />
-        </div>
-        <div class="row two">
-          <div>
-            <label for="password">Contraseña</label>
-            <input id="password" type="password" required minlength="8" placeholder="Mín. 8 caracteres"/>
-          </div>
-          <div>
-            <label for="confirm">Confirmar contraseña</label>
-            <input id="confirm" type="password" required minlength="8"/>
-          </div>
-        </div>
-        <button class="btn" id="regBtn" type="submit">Crear cuenta</button>
-        <div id="message"></div>
-      </form>
-
-      <p class="muted" style="margin-top:8px;">
-        ¿Ya tienes cuenta?
-        <a href="./client-login.html">Ir a Login</a>
-      </p>
-    </section>
-  </main>
-
-  <script>
-    const LS_CLIENTS = "ab_client_accounts";
-
-    async function sha256(text){
-      const enc = new TextEncoder().encode(text);
-      const buf = await crypto.subtle.digest("SHA-256", enc);
-      return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
-    }
-    function loadClients(){
-      try { return JSON.parse(localStorage.getItem(LS_CLIENTS)) || []; }
-      catch { return []; }
-    }
-    function saveClients(list){ localStorage.setItem(LS_CLIENTS, JSON.stringify(list)); }
-    function setMessage(text, ok=false){
-      const el = document.getElementById("message");
-      el.className = ok ? "ok" : "error";
-      el.textContent = text;
-    }
-
-    document.addEventListener("DOMContentLoaded", ()=>{
-      const form = document.getElementById("regForm");
-      const btn = document.getElementById("regBtn");
-
-      form.addEventListener("submit", async (e)=>{
-        e.preventDefault();
-        setMessage(""); btn.disabled = true;
-
-        const fullName = document.getElementById("fullName").value.trim();
-        const email = document.getElementById("email").value.trim().toLowerCase();
-        const org = document.getElementById("org").value.trim();
-        const pass = document.getElementById("password").value;
-        const confirm = document.getElementById("confirm").value;
-
-        if(pass !== confirm){ setMessage("Las contraseñas no coinciden."); btn.disabled=false; return; }
-        if(pass.length < 8){ setMessage("La contraseña debe tener al menos 8 caracteres."); btn.disabled=false; return; }
-
-        const clients = loadClients();
-        if(clients.some(c => c.email === email)){
-          setMessage("Ya existe un usuario con ese correo."); btn.disabled=false; return;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActiveBreak — Registro de Cliente</title>
+    <link rel="stylesheet" href="../style.css" />
+    <style>
+      .auth-wrap {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+      }
+      .card {
+        width: min(640px, 92vw);
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+      }
+      .card h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+      }
+      .row {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      label {
+        font-weight: 600;
+        font-size: 14px;
+      }
+      input {
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 15px;
+        width: 100%;
+      }
+      .btn {
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-weight: 700;
+        background: #4f46e5;
+        color: #fff;
+        cursor: pointer;
+        width: 100%;
+      }
+      .muted {
+        color: #64748b;
+        font-size: 14px;
+      }
+      .error {
+        color: #dc2626;
+        font-size: 14px;
+        margin-top: 6px;
+      }
+      .ok {
+        color: #16a34a;
+        font-size: 14px;
+        margin-top: 6px;
+      }
+      .two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 720px) {
+        .two {
+          grid-template-columns: 1fr;
         }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="auth-wrap">
+      <section class="card">
+        <h1>Registrar Cliente</h1>
+        <p class="muted">Crea una cuenta de usuario para usar ActiveBreak.</p>
 
-        const passHash = await sha256(pass);
-        clients.push({ email, passHash, fullName, org, createdAt: Date.now(), role:"client" });
-        saveClients(clients);
+        <form id="regForm" autocomplete="off">
+          <div class="row">
+            <label for="fullName">Nombre completo</label>
+            <input
+              id="fullName"
+              type="text"
+              required
+              placeholder="Nombre y apellido"
+            />
+          </div>
+          <div class="row">
+            <label for="email">Correo</label>
+            <input
+              id="email"
+              type="email"
+              required
+              placeholder="usuario@empresa.com"
+            />
+          </div>
+          <div class="row">
+            <label for="org">Organización (opcional)</label>
+            <input id="org" type="text" placeholder="Mi Empresa S.A.S." />
+          </div>
+          <div class="row two">
+            <div>
+              <label for="password">Contraseña</label>
+              <input
+                id="password"
+                type="password"
+                required
+                minlength="8"
+                placeholder="Mín. 8 caracteres"
+              />
+            </div>
+            <div>
+              <label for="confirm">Confirmar contraseña</label>
+              <input id="confirm" type="password" required minlength="8" />
+            </div>
+          </div>
+          <button class="btn" id="regBtn" type="submit">Crear cuenta</button>
+          <div id="message"></div>
+        </form>
 
-        try { window.api?.sendNotification?.("Registro de cliente exitoso. Ahora inicia sesión."); } catch(e){}
+        <p class="muted" style="margin-top: 8px">
+          ¿Ya tienes cuenta?
+          <a href="./client-login.html">Ir a Login</a>
+        </p>
+      </section>
+    </main>
 
-        setMessage("Cuenta creada. Redirigiendo a Login…", true);
-        setTimeout(()=>{
-          const q = new URLSearchParams({ email, created:"1" }).toString();
-          window.location.href = `./client-login.html?${q}`;
-        }, 500);
+    <script>
+      function setMessage(text, ok = false) {
+        const el = document.getElementById("message");
+        el.className = ok ? "ok" : "error";
+        el.textContent = text;
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("regForm");
+        const btn = document.getElementById("regBtn");
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          setMessage("");
+          btn.disabled = true;
+
+          const fullName = document.getElementById("fullName").value.trim();
+          const email = document
+            .getElementById("email")
+            .value.trim()
+            .toLowerCase();
+          const org = document.getElementById("org").value.trim();
+          const pass = document.getElementById("password").value;
+          const confirm = document.getElementById("confirm").value;
+
+          if (pass !== confirm) {
+            setMessage("Las contraseñas no coinciden.");
+            btn.disabled = false;
+            return;
+          }
+          if (pass.length < 8) {
+            setMessage("La contraseña debe tener al menos 8 caracteres.");
+            btn.disabled = false;
+            return;
+          }
+
+          try {
+            // Call IPC handler to register user in database
+            const result = await window.api.authRegister(
+              email,
+              pass,
+              "client",
+              {
+                fullName,
+                orgName: org,
+              }
+            );
+
+            if (!result.success) {
+              setMessage(result.message);
+              btn.disabled = false;
+              return;
+            }
+
+            // Success - notify and redirect
+            try {
+              window.api?.sendNotification(
+                "Registro de cliente exitoso. Ahora inicia sesión."
+              );
+            } catch (e) {}
+
+            setMessage("Cuenta creada. Redirigiendo a Login…", true);
+            setTimeout(() => {
+              const q = new URLSearchParams({ email, created: "1" }).toString();
+              window.location.href = `./client-login.html?${q}`;
+            }, 500);
+          } catch (error) {
+            console.error("Registration error:", error);
+            setMessage("Error al crear la cuenta. Intenta de nuevo.");
+            btn.disabled = false;
+          }
+        });
       });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
