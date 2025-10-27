@@ -756,6 +756,17 @@ function updateBreakCountdown() {
     };
   }
 
+  // 📈 Calculate percentage change for trend analysis
+  function calculatePercentageChange(current, previous) {
+    if (previous === 0) {
+      if (current === 0) return "0.0%";
+      return "+100.0%";
+    }
+    const change = ((current - previous) / previous) * 100;
+    const sign = change > 0 ? "+" : "";
+    return `${sign}${change.toFixed(1)}%`;
+  }
+
   function render(startDate = null, endDate = null) {
     const { correct, incorrect, rows } = computeSessionDurations(
       startDate,
@@ -767,7 +778,62 @@ function updateBreakCountdown() {
     kpiIncorrect.textContent = hhmmss(incorrect);
     kpiAlerts.textContent = String(alerts);
 
-    // 📊 Update Chart
+    // � Trend Analysis - Calculate comparison with previous period
+    const trendContainer = document.getElementById("trend-analysis-container");
+    if (startDate && endDate && trendContainer) {
+      // Parse dates
+      const s = new Date(startDate);
+      const e = new Date(endDate);
+      e.setHours(23, 59, 59, 999); // End of day
+
+      // Calculate duration in milliseconds
+      const duration = e.getTime() - s.getTime();
+
+      // Calculate previous period dates
+      const prevEndDate = new Date(s.getTime() - 24 * 60 * 60 * 1000); // One day before start
+      const prevStartDate = new Date(prevEndDate.getTime() - duration);
+
+      // Format dates for computeSessionDurations (YYYY-MM-DD)
+      const prevStartStr = prevStartDate.toISOString().split("T")[0];
+      const prevEndStr = prevEndDate.toISOString().split("T")[0];
+
+      // Get previous period stats
+      const previousStats = computeSessionDurations(prevStartStr, prevEndStr);
+
+      // Calculate percentage changes
+      const correctTrend = calculatePercentageChange(
+        correct,
+        previousStats.correct
+      );
+      const incorrectTrend = calculatePercentageChange(
+        incorrect,
+        previousStats.incorrect
+      );
+
+      // Determine if trends are positive or negative for styling
+      const correctClass = correctTrend.startsWith("+")
+        ? "trend-positive"
+        : correctTrend.startsWith("-")
+        ? "trend-negative"
+        : "";
+      const incorrectClass = incorrectTrend.startsWith("-")
+        ? "trend-positive"
+        : incorrectTrend.startsWith("+")
+        ? "trend-negative"
+        : "";
+
+      // Display trend analysis
+      trendContainer.innerHTML = `
+        <strong>📊 Comparación con período anterior:</strong><br>
+        Postura Correcta: <span class="${correctClass}">${correctTrend}</span> | 
+        Postura Incorrecta: <span class="${incorrectClass}">${incorrectTrend}</span>
+      `;
+      trendContainer.style.display = "block";
+    } else if (trendContainer) {
+      trendContainer.style.display = "none";
+    }
+
+    // �📊 Update Chart
     const chartData = processHistoryForChart(rows);
 
     const ctx = document.getElementById("postureChart");
@@ -882,6 +948,11 @@ function updateBreakCountdown() {
   function open() {
     modal.setAttribute("aria-hidden", "false");
     currentPage = 1; // Reset to first page when opening modal
+    // Hide trend analysis when modal opens (no filter applied yet)
+    const trendContainer = document.getElementById("trend-analysis-container");
+    if (trendContainer) {
+      trendContainer.style.display = "none";
+    }
     render(null, null); // Render with no filters initially
     refreshTimer = setInterval(() => {
       const startDate = startDateInput.value || null;
@@ -921,6 +992,13 @@ function updateBreakCountdown() {
       startDateInput.value = "";
       endDateInput.value = "";
       currentPage = 1; // Reset to first page
+      // Hide trend analysis when resetting
+      const trendContainer = document.getElementById(
+        "trend-analysis-container"
+      );
+      if (trendContainer) {
+        trendContainer.style.display = "none";
+      }
       render(null, null);
     });
   }

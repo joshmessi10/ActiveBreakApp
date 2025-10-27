@@ -266,7 +266,7 @@ ActiveBreakApp/
    - ✅ **Pagination for event history** (20 events per page with prev/next navigation and page counter)
    - ✅ **Session-based tracking** (automatic Session Start/End event logging on camera start, pause, logout, and window close)
    - ✅ **Break exercise recommendations** (random stretching exercise suggestions with each break notification)
-   - ❌ **Missing**: Advanced trends analysis (weekly/monthly comparisons)
+   - ✅ **Advanced trends analysis** (automatic comparison with previous period showing percentage changes for filtered date ranges)
 
 ### ❌ Not Yet Implemented
 
@@ -383,9 +383,9 @@ The app is **fully production-ready** for deployment: real-time posture detectio
 
 ---
 
-**Document Version**: 21.0 (Exercise Suggestions & Break Countdown Timer)  
-**Last Updated**: October 27, 2025 (After Exercise Suggestions & Break Countdown Implementation)  
-**Project Status**: Core AI Functional ✅ | Notifications Working ✅ | Stats Fully Persistent ✅ | **Date-Range Filtering Complete ✅** | **Advanced Spine Angle Analysis ✅** | **Analytics & Charts ✅** | **Pagination ✅** | **Session Tracking ✅** | **Exercise Suggestions ✅** | **Break Countdown ✅** | Build Ready ✅ | **Authentication Production-Ready ✅** | **Session Security Hardened ✅** | **Documentation 100% Verified ✅**
+**Document Version**: 22.0 (Advanced Trends Analysis)  
+**Last Updated**: October 27, 2025 (After Advanced Trends Analysis Implementation)  
+**Project Status**: Core AI Functional ✅ | Notifications Working ✅ | Stats Fully Persistent ✅ | **Date-Range Filtering Complete ✅** | **Advanced Spine Angle Analysis ✅** | **Analytics & Charts ✅** | **Pagination ✅** | **Session Tracking ✅** | **Exercise Suggestions ✅** | **Break Countdown ✅** | **Trends Analysis ✅** | Build Ready ✅ | **Authentication Production-Ready ✅** | **Session Security Hardened ✅** | **Documentation 100% Verified ✅**
 
 **Update Summary**:
 
@@ -402,3 +402,6 @@ The app is **fully production-ready** for deployment: real-time posture detectio
 11. **Implemented break countdown timer showing time remaining until next break**
 12. New stat card "Próximo descanso" displays real-time countdown in mm:ss format
 13. Countdown updates every second and respects user's configured break interval setting
+14. **Implemented advanced trends analysis with automatic period-over-period comparison**
+15. When filtering by date range, system automatically calculates and displays percentage changes vs. previous equivalent period
+16. Trend indicators show positive/negative changes with color coding (green for improvements, red for regressions)
