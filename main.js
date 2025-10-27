@@ -250,19 +250,19 @@ const createWindow = () => {
 };
 
 // 🔔 IPC Listener - Handle notification requests from renderer
-ipcMain.on("notify:posture", (event, message) => {
-  console.log("📬 IPC received: notify:posture -", message);
+ipcMain.on("notify:posture", (event, title, body) => {
+  console.log("📬 IPC received: notify:posture -", title, body);
 
   // Check if notifications are supported
   if (Notification.isSupported()) {
     const notification = new Notification({
-      title: "ActiveBreak Alert",
-      body: message || "Please check your posture!",
+      title: title || "ActiveBreak Alert",
+      body: body || "¡Revisa tu postura!",
       silent: false, // Enable sound
     });
 
     notification.show();
-    console.log("✅ Notification sent:", message);
+    console.log("✅ Notification sent:", title, body);
   } else {
     console.log("❌ Notifications not supported on this system");
   }

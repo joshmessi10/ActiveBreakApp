@@ -3,12 +3,33 @@
 // 🎯 A. Imports - Access global poseDetection from CDN
 const { SupportedModels, createDetector } = window.poseDetection;
 
+// 💪 Exercise Suggestions for Break Reminders
+const breakExercises = [
+  {
+    name: "Giro de Cuello",
+    desc: "Gira tu cabeza lentamente de lado a lado durante 15 segundos.",
+  },
+  {
+    name: "Estiramiento de Hombros",
+    desc: "Encoge tus hombros hacia tus orejas, mantén 5s y relaja.",
+  },
+  {
+    name: "Estiramiento de Muñeca",
+    desc: "Extiende tu brazo y flexiona tu muñeca hacia arriba y abajo (10s).",
+  },
+  {
+    name: "Mirada Lejana",
+    desc: "Enfoca tu vista en un objeto lejano (20m+) durante 20 segundos.",
+  },
+];
+
 // 🎨 DOM Elements
 const video = document.getElementById("video");
 const canvas = document.getElementById("output");
 const toggleBtn = document.getElementById("toggle-btn");
 const postureStatus = document.getElementById("posture-status");
 const sessionTime = document.getElementById("session-time");
+const breakTime = document.getElementById("break-time");
 const alertsCount = document.getElementById("alerts-count");
 const postureCard = document.getElementById("posture-card");
 const postureDetail = document.getElementById("posture-detail");
@@ -277,6 +298,7 @@ function classifyPose(pose) {
         localStorage.getItem("settings_notifications") !== "false";
       if (notificationsEnabled && window.api && window.api.sendNotification) {
         window.api.sendNotification(
+          "¡Alerta de Postura!",
           `¡Corrige tu postura! Llevas más de ${alertThreshold}s en mala posición.`
         );
       }
@@ -422,8 +444,13 @@ function startDataCollection() {
       window.api.sendNotification &&
       localStorage.getItem("settings_notifications") !== "false"
     ) {
+      // Pick a random exercise
+      const exercise =
+        breakExercises[Math.floor(Math.random() * breakExercises.length)];
+      // Send the new notification
       window.api.sendNotification(
-        "¡Hora de descansar! Tómate un breve descanso y estírate."
+        `¡Hora de un Descanso! (Ejercicio)`,
+        `Sugerencia: ${exercise.name} - ${exercise.desc}`
       );
       lastBreakNotificationTime = elapsedSeconds;
     }
@@ -463,6 +490,10 @@ function stopCamera() {
     clearInterval(dataInterval);
     dataInterval = null;
   }
+  // Reset break countdown display
+  if (breakTime) {
+    breakTime.textContent = "--:--";
+  }
   statusText.textContent = "Cámara pausada ⏸️";
   setToggleUIPaused();
 }
@@ -495,12 +526,34 @@ function startTimer() {
     if (sessionTime) {
       sessionTime.textContent = formatTime(seconds);
     }
+    // Update break countdown
+    updateBreakCountdown();
   }, 1000);
   console.log("⏱️ Session timer started");
 }
 
 function stopTimer() {
   clearInterval(timerInterval);
+}
+
+// ⏰ Update break countdown display
+function updateBreakCountdown() {
+  if (!breakTime) return;
+
+  const breakIntervalSeconds =
+    parseInt(localStorage.getItem("settings_breakInterval") || "20", 10) * 60;
+
+  const elapsedSeconds = seconds;
+  const nextBreakAt =
+    Math.ceil((elapsedSeconds + 1) / breakIntervalSeconds) *
+    breakIntervalSeconds;
+  const remainingSeconds = nextBreakAt - elapsedSeconds;
+
+  if (running && !paused) {
+    breakTime.textContent = formatTime(remainingSeconds);
+  } else {
+    breakTime.textContent = "--:--";
+  }
 }
 
 // ===== DEPRECATED: Admin Gate Modal removed =====

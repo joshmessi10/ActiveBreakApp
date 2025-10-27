@@ -2,7 +2,8 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("api", {
-  sendNotification: (message) => ipcRenderer.send("notify:posture", message),
+  sendNotification: (title, body) =>
+    ipcRenderer.send("notify:posture", title, body),
   authRegister: (email, password, role, additionalData) =>
     ipcRenderer.invoke("auth:register", email, password, role, additionalData),
   authLogin: (email, password) =>

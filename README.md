@@ -277,7 +277,7 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 - [x] ✅ Análisis avanzado de ángulos de columna vertebral (COMPLETADO - Regla 2 usa cálculo de ángulo cuello/espalda con Math.atan2)
 - [x] ✅ Gráficos de progreso diario/semanal (COMPLETADO - Chart.js con gráfico de barras apiladas en modal de estadísticas)
 - [x] ✅ Análisis de sesiones (inicio/fin/duración) (COMPLETADO - Registro automático de eventos de sesión en historial)
-- [ ] Sugerencias de ejercicios de estiramiento
+- [x] ✅ Sugerencias de ejercicios de estiramiento (COMPLETADO - Notificaciones de descanso con ejercicios aleatorios)
 
 ---
 
