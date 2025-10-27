@@ -19,6 +19,7 @@ let detector = null;
 let ctx = null;
 let stream = null;
 let timerInterval = null;
+let dataInterval = null; // Data collection interval
 let seconds = 0;
 let running = false;
 let paused = false;
@@ -82,6 +83,9 @@ async function startCamera() {
     video.srcObject = stream;
     statusText.textContent = "Cámara activa ✅";
 
+    // Log session start event
+    logPostureEvent("Session Start");
+
     // Wait for video to be ready, then initialize pose detection
     video.onloadedmetadata = () => {
       initPoseDetection();
@@ -112,6 +116,7 @@ async function initPoseDetection() {
     statusText.textContent = "Modelo cargado ✅ - Detectando postura...";
 
     // 4. Start the detection loop
+    running = true;
     detectPose();
 
     // 5. Start data collection interval (every 1 second)
@@ -332,7 +337,7 @@ function drawPose(pose) {
   });
 }
 
-// � I. Event Logging - Log posture state changes
+// 📝 I. Event Logging - Log posture state changes
 function logPostureEvent(state) {
   try {
     // 1. Read existing events from localStorage
@@ -340,9 +345,20 @@ function logPostureEvent(state) {
     let history = historyJSON ? JSON.parse(historyJSON) : [];
 
     // 2. Create new event object
+    // State can be: "correct", "incorrect", "Session Start", "Session End"
+    let eventType;
+    if (state === "correct") {
+      eventType = "Correcta";
+    } else if (state === "incorrect") {
+      eventType = "Incorrecta";
+    } else {
+      // For session events, use state directly (e.g., "Session Start", "Session End")
+      eventType = state;
+    }
+
     const event = {
       timestamp: Date.now(),
-      type: state === "correct" ? "Correcta" : "Incorrecta",
+      type: eventType,
     };
 
     // 3. Add to beginning of array (newest first)
@@ -432,12 +448,21 @@ function setToggleUIPaused() {
 
 // Detener y reanudar cámara
 function stopCamera() {
+  // Log session end event before stopping camera
+  logPostureEvent("Session End");
+
   if (stream) {
     stream.getTracks().forEach((t) => t.stop());
     video.srcObject = null;
     stream = null;
   }
+  running = false;
   paused = true;
+  stopTimer(); // Stop the session timer when camera is stopped
+  if (dataInterval) {
+    clearInterval(dataInterval);
+    dataInterval = null;
+  }
   statusText.textContent = "Cámara pausada ⏸️";
   setToggleUIPaused();
 }
@@ -772,7 +797,16 @@ function stopTimer() {
 
       pageRows.forEach((r) => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${r.time}</td><td>${r.type}</td>`;
+
+        // Check if this is a session event or posture event
+        if (r.type === "Session Start" || r.type === "Session End") {
+          // Session events span both columns
+          tr.innerHTML = `<td colspan="2" class="event-session">🔔 ${r.type} - ${r.time}</td>`;
+        } else {
+          // Regular posture events
+          tr.innerHTML = `<td>${r.time}</td><td>${r.type}</td>`;
+        }
+
         tbody.appendChild(tr);
       });
 
@@ -907,6 +941,9 @@ window.addEventListener("DOMContentLoaded", () => {
 // Logout function for user dashboard
 function logout() {
   try {
+    // Log session end before logout
+    logPostureEvent("Session End");
+
     localStorage.removeItem("ab_current_client");
     // Use replace() to prevent back button issues
     window.location.replace("landing.html");
@@ -915,3 +952,8 @@ function logout() {
     window.location.replace("landing.html");
   }
 }
+
+// Log session end when window/tab is closed
+window.addEventListener("beforeunload", () => {
+  logPostureEvent("Session End");
+});

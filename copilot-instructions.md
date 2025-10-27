@@ -206,9 +206,42 @@ contextBridge.exposeInMainWorld("api", {
 
 ---
 
-### **3. `public/script.js` (Core AI Logic)** - 918 lines
+### **3. `public/script.js` (Core AI Logic)** - 960 lines
 
-**Responsibility**: AI pose detection, classification, notifications, data tracking, pagination
+**Responsibility**: AI pose detection, classification, notifications, data tracking, pagination, session tracking
+
+**✅ VERIFIED Global Variables (Lines 1-36)**:
+
+**Critical State Variables**:
+```javascript
+// AI and Canvas
+let detector = null;
+let ctx = null;
+let stream = null;
+let timerInterval = null;
+let dataInterval = null; // ⚠️ CRITICAL: Data collection interval (added for timer fix)
+let seconds = 0;
+let running = false; // ⚠️ CRITICAL: Must be set to true for timer to work
+let paused = false;
+
+// Alert Threshold Globals
+let badPostureStartTime = null;
+let notificationSent = false;
+
+// Break Timer Globals
+let lastBreakNotificationTime = 0;
+
+// Event Logging Globals
+let lastPostureState = "correct";
+
+// Chart.js Global
+let myPostureChart = null;
+```
+
+**⚠️ CRITICAL BUG FIX - Session Timer**:
+- **Problem**: Timer was stuck at 00:00 because `running` was never set to `true`
+- **Solution**: Set `running = true` in `initPoseDetection()` (line 119)
+- **Impact**: Session timer now counts up correctly
 
 **✅ VERIFIED Military-Grade Classification (Lines 125-220)**:
 
@@ -1552,11 +1585,13 @@ When modifying this codebase, be aware of these **VERIFIED WORKING FEATURES**:
    - Empty state handling ("No hay eventos en el rango seleccionado")
    - Auto-refresh respects current filter values and preserves current page
 
-4. **Camera Pause/Resume** (script.js lines 323-350):
+4. **Camera Pause/Resume** (script.js lines 448-468):
 
    - Stop/start camera feed
    - Toggle button changes UI state
    - Pauses detection loop
+   - **⚠️ CRITICAL CLEANUP**: Calls `stopTimer()` and clears `dataInterval` to prevent memory leaks
+   - **Sets `running = false`** when stopping (essential for proper state management)
 
 5. **Alert Counter with Blink Animation** (script.js lines 23-42):
 
@@ -1564,24 +1599,41 @@ When modifying this codebase, be aware of these **VERIFIED WORKING FEATURES**:
    - CSS blink animation on alert card
    - Separate `alertsHistory` array (max 1000)
 
-6. **Session Timer** (script.js lines 560-575):
+6. **Session Timer** (script.js lines 483-495):
+   - **⚠️ CRITICAL FIX**: Set `running = true` in `initPoseDetection()` (line 119) for timer to work
    - Auto-starts with detection
    - Displayed in UI (mm:ss format)
    - Used for break reminder intervals
+   - **Properly stopped** with `stopTimer()` in `stopCamera()` (line 460)
+   - **Reset behavior**: Timer resets on each new session (camera restart)
+
+7. **Data Collection Interval** (script.js lines 385-430):
+   - **Global variable**: `dataInterval` tracks the 1-second collection interval
+   - Collects posture time data every second when `running = true` and not `paused`
+   - Increments `correctSeconds` or `incorrectSeconds` in localStorage
+   - Handles break reminders based on `elapsedSeconds`
+   - **⚠️ CRITICAL CLEANUP**: Cleared in `stopCamera()` to prevent memory leaks
 
 ---
 
-**Document Version**: 12.0 (Pagination Feature Documentation + Chart.js Update Optimization)  
+**Document Version**: 13.0 (Session Timer & Data Collection Bug Fixes)  
 **Last Updated**: October 27, 2025  
 **Changes Applied**:
 
+- ✅ **🔴 CRITICAL FIX: Added `dataInterval` global variable (line 22) - was causing ReferenceError in pose detection**
+- ✅ **🔴 CRITICAL FIX: Set `running = true` in initPoseDetection() (line 119) - session timer was stuck at 00:00**
+- ✅ **🔴 CRITICAL FIX: Added timer cleanup in stopCamera() (lines 460-464) - prevents memory leaks**
+- ✅ **NEW: Implemented session-based tracking with Session Start/End events**
+- ✅ **NEW: Added global variables documentation section with all critical state variables**
+- ✅ **NEW: Added Section 7 documenting data collection interval system (lines 385-430)**
+- ✅ **CORRECTED: script.js file size updated from 918 to 960 lines (session tracking + bug fixes)**
 - ✅ Completed comprehensive line-by-line QA audit of all documentation vs. code
 - ✅ Fixed minor line number discrepancies in Section 6 (admin-dashboard.js)
 - ✅ Verified all 5 IPC handlers match exactly (main.js lines 62-232)
 - ✅ **UPDATED: Replaced Rule 2 with advanced spine angle analysis using Math.atan2()**
 - ✅ **NEW: Military-grade classification now uses (15% horizontal, ±15° spine angle, 10% shoulders)**
 - ✅ **CORRECTED: Rule 1 line 194 (was 197), Rule 2 lines 200-214 (was 203-217), Rule 3 line 215 (was 219), isCentered line 221 (was 225)**
-- ✅ **CORRECTED: logPostureEvent lines 333-355 (was 237-259) - ~96 line offset fixed**
+- ✅ **CORRECTED: logPostureEvent lines 335-380 (was 333-355) - now handles any event type including Session Start/End**
 - ✅ Verified date-range filtering fully implemented (script.js lines 533-690)
 - ✅ Verified self-deletion detection in admin dashboard (lines 121-137)
 - ✅ Verified all logout functions use `window.location.replace()` for security
@@ -1594,8 +1646,6 @@ When modifying this codebase, be aware of these **VERIFIED WORKING FEATURES**:
 - ✅ **UPDATED: Chart lifecycle optimized - now uses update() instead of destroy/recreate pattern (eliminates animation reload)**
 - ✅ **NEW: Implemented pagination for event history table (20 events per page)**
 - ✅ **NEW: Added Section 10 with complete pagination documentation (UI controls, logic, event handlers, styling)**
-- ✅ **CORRECTED: script.js file size updated from 650+ to 918 lines (reflects pagination additions)**
-- ✅ **CORRECTED: All line number references updated to reflect pagination code additions**
 
 **Authentication Status**: ✅ Full production implementation with persistent database storage  
 **Session Security**: ✅ Enhanced with self-deletion detection and logout hardening  

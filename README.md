@@ -185,7 +185,8 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
    - 📈 Gráficos interactivos con Chart.js (desglose diario por tipo de postura)
    - 📝 Historial de eventos con fecha/hora
    - 🎨 Eventos coloreados (verde/rojo) según tipo
-   - 📄 Paginación (20 eventos por página con navegación prev/next)
+   - � **Eventos de sesión** (Session Start/End registrados automáticamente)
+   - �📄 Paginación (20 eventos por página con navegación prev/next)
    - ⏱️ Últimos 100 cambios de postura registrados
    - 💾 **Datos se mantienen al cerrar y reabrir la app**
    - 💾 Exportar a CSV (modal de estadísticas en vivo)
@@ -275,8 +276,8 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 - [x] ✅ Filtrado de historial por fecha/rango (COMPLETADO - Modal de estadísticas con filtros de fecha)
 - [x] ✅ Análisis avanzado de ángulos de columna vertebral (COMPLETADO - Regla 2 usa cálculo de ángulo cuello/espalda con Math.atan2)
 - [x] ✅ Gráficos de progreso diario/semanal (COMPLETADO - Chart.js con gráfico de barras apiladas en modal de estadísticas)
+- [x] ✅ Análisis de sesiones (inicio/fin/duración) (COMPLETADO - Registro automático de eventos de sesión en historial)
 - [ ] Sugerencias de ejercicios de estiramiento
-- [ ] Análisis de sesiones (inicio/fin/duración)
 
 ---
 
@@ -292,5 +293,6 @@ Esto carga la página de inicio (`landing.html`) como punto de entrada, permitie
 8. **Implementar gráficos de progreso con Chart.js (gráfico de barras apiladas por día)**
 9. **Optimizar Chart.js para eliminar animación de recarga cada segundo (ahora usa update() en vez de destroy/recreate)**
 10. **Implementar paginación para tabla de historial de eventos (20 eventos por página con navegación prev/next)**
+11. **Implementar análisis de sesiones con registro automático de eventos Session Start/End**
 
-La aplicación ahora incluye un sistema de autenticación de producción completo con almacenamiento seguro de usuarios, gestión avanzada de sesiones, análisis de datos con filtrado temporal, visualización gráfica de progreso optimizada, y navegación paginada de eventos. **Documentación 100% verificada y lista para producción.**
+La aplicación ahora incluye un sistema de autenticación de producción completo con almacenamiento seguro de usuarios, gestión avanzada de sesiones, análisis de datos con filtrado temporal, visualización gráfica de progreso optimizada, navegación paginada de eventos, y **tracking completo de sesiones con registro automático de inicio/fin**. **Documentación 100% verificada y lista para producción.**
