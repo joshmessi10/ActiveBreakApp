@@ -179,6 +179,184 @@ async function detectPose() {
   requestAnimationFrame(detectPose);
 }
 
+// 🎨 Visual Posture Correction Guides
+function showVisualGuide(errorType) {
+  const guideContainer = document.getElementById("visual-guide-container");
+  if (!guideContainer) return;
+
+  let svgContent = "";
+
+  switch (errorType) {
+    case "horizontal":
+      // Head not centered horizontally - show figure moving sideways
+      svgContent = `
+        <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background -->
+          <rect width="200" height="150" fill="#eef6ff"/>
+          
+          <!-- Center line reference -->
+          <line x1="100" y1="10" x2="100" y2="140" stroke="#c8dcff" stroke-width="2" stroke-dasharray="5,5"/>
+          
+          <!-- Incorrect position (left side, faded) -->
+          <g opacity="0.3">
+            <circle cx="70" cy="40" r="15" fill="#fecaca" stroke="#e11d48" stroke-width="2"/>
+            <line x1="70" y1="55" x2="70" y2="90" stroke="#e11d48" stroke-width="3"/>
+            <line x1="70" y1="65" x2="55" y2="80" stroke="#e11d48" stroke-width="3"/>
+            <line x1="70" y1="65" x2="85" y2="80" stroke="#e11d48" stroke-width="3"/>
+            <line x1="70" y1="90" x2="55" y2="120" stroke="#e11d48" stroke-width="3"/>
+            <line x1="70" y1="90" x2="85" y2="120" stroke="#e11d48" stroke-width="3"/>
+          </g>
+          
+          <!-- Arrow indicating movement -->
+          <path d="M 80 75 L 95 75" stroke="#60a5fa" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+          
+          <!-- Correct position (centered, bright) -->
+          <g>
+            <circle cx="100" cy="40" r="15" fill="#a7f3d0" stroke="#16a34a" stroke-width="2"/>
+            <line x1="100" y1="55" x2="100" y2="90" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="65" x2="85" y2="80" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="65" x2="115" y2="80" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="90" x2="85" y2="120" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="90" x2="115" y2="120" stroke="#16a34a" stroke-width="3"/>
+          </g>
+          
+          <!-- Arrow marker definition -->
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <polygon points="0 0, 10 3, 0 6" fill="#60a5fa"/>
+            </marker>
+          </defs>
+          
+          <!-- Text -->
+          <text x="100" y="145" text-anchor="middle" fill="#334155" font-size="12" font-weight="bold">Centra tu cabeza</text>
+        </svg>
+      `;
+      break;
+
+    case "upright":
+      // Spine angle wrong - show figure straightening back
+      svgContent = `
+        <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background -->
+          <rect width="200" height="150" fill="#eef6ff"/>
+          
+          <!-- Vertical reference line -->
+          <line x1="100" y1="10" x2="100" y2="130" stroke="#c8dcff" stroke-width="2" stroke-dasharray="5,5"/>
+          
+          <!-- Incorrect posture (slouched, left side, faded) -->
+          <g opacity="0.3">
+            <circle cx="65" cy="35" r="15" fill="#fecaca" stroke="#e11d48" stroke-width="2"/>
+            <path d="M 70 50 Q 85 70, 80 95" stroke="#e11d48" stroke-width="3" fill="none"/>
+            <line x1="70" y1="60" x2="55" y2="75" stroke="#e11d48" stroke-width="3"/>
+            <line x1="70" y1="60" x2="85" y2="75" stroke="#e11d48" stroke-width="3"/>
+            <line x1="80" y1="95" x2="70" y2="120" stroke="#e11d48" stroke-width="3"/>
+            <line x1="80" y1="95" x2="90" y2="120" stroke="#e11d48" stroke-width="3"/>
+          </g>
+          
+          <!-- Arrow indicating movement -->
+          <path d="M 85 60 Q 95 55, 102 50" stroke="#60a5fa" stroke-width="3" fill="none" marker-end="url(#arrowhead2)"/>
+          
+          <!-- Correct posture (upright, centered, bright) -->
+          <g>
+            <circle cx="100" cy="35" r="15" fill="#a7f3d0" stroke="#16a34a" stroke-width="2"/>
+            <line x1="100" y1="50" x2="100" y2="95" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="60" x2="85" y2="75" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="60" x2="115" y2="75" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="95" x2="85" y2="120" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="95" x2="115" y2="120" stroke="#16a34a" stroke-width="3"/>
+          </g>
+          
+          <!-- Arrow marker definition -->
+          <defs>
+            <marker id="arrowhead2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <polygon points="0 0, 10 3, 0 6" fill="#60a5fa"/>
+            </marker>
+          </defs>
+          
+          <!-- Text -->
+          <text x="100" y="145" text-anchor="middle" fill="#334155" font-size="12" font-weight="bold">Endereza tu espalda</text>
+        </svg>
+      `;
+      break;
+
+    case "shoulders":
+      // Shoulders not level - show figure leveling shoulders
+      svgContent = `
+        <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background -->
+          <rect width="200" height="150" fill="#eef6ff"/>
+          
+          <!-- Horizontal reference line -->
+          <line x1="30" y1="70" x2="170" y2="70" stroke="#c8dcff" stroke-width="2" stroke-dasharray="5,5"/>
+          
+          <!-- Incorrect posture (tilted shoulders, faded) -->
+          <g opacity="0.3">
+            <circle cx="100" cy="35" r="15" fill="#fecaca" stroke="#e11d48" stroke-width="2"/>
+            <line x1="100" y1="50" x2="100" y2="95" stroke="#e11d48" stroke-width="3"/>
+            <line x1="100" y1="60" x2="75" y2="80" stroke="#e11d48" stroke-width="3"/>
+            <line x1="100" y1="60" x2="125" y2="70" stroke="#e11d48" stroke-width="3"/>
+            <line x1="100" y1="95" x2="85" y2="120" stroke="#e11d48" stroke-width="3"/>
+            <line x1="100" y1="95" x2="115" y2="120" stroke="#e11d48" stroke-width="3"/>
+          </g>
+          
+          <!-- Rotation arrow -->
+          <path d="M 110 55 Q 115 60, 112 67" stroke="#60a5fa" stroke-width="2.5" fill="none" marker-end="url(#arrowhead3)"/>
+          <path d="M 90 65 Q 85 60, 88 53" stroke="#60a5fa" stroke-width="2.5" fill="none" marker-end="url(#arrowhead3)"/>
+          
+          <!-- Correct posture (level shoulders, bright) -->
+          <g transform="translate(0, -20)">
+            <circle cx="100" cy="115" r="15" fill="#a7f3d0" stroke="#16a34a" stroke-width="2"/>
+            <line x1="100" y1="130" x2="100" y2="175" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="140" x2="75" y2="150" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="140" x2="125" y2="150" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="175" x2="85" y2="200" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="175" x2="115" y2="200" stroke="#16a34a" stroke-width="3"/>
+          </g>
+          
+          <!-- Arrow marker definition -->
+          <defs>
+            <marker id="arrowhead3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <polygon points="0 0, 10 3, 0 6" fill="#60a5fa"/>
+            </marker>
+          </defs>
+          
+          <!-- Text -->
+          <text x="100" y="145" text-anchor="middle" fill="#334155" font-size="12" font-weight="bold">Nivela tus hombros</text>
+        </svg>
+      `;
+      break;
+
+    case "none":
+    default:
+      // Good posture - show checkmark
+      svgContent = `
+        <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background -->
+          <rect width="200" height="150" fill="#eef6ff"/>
+          
+          <!-- Perfect posture figure -->
+          <g>
+            <circle cx="100" cy="40" r="15" fill="#a7f3d0" stroke="#16a34a" stroke-width="2"/>
+            <line x1="100" y1="55" x2="100" y2="90" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="65" x2="85" y2="80" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="65" x2="115" y2="80" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="90" x2="85" y2="120" stroke="#16a34a" stroke-width="3"/>
+            <line x1="100" y1="90" x2="115" y2="120" stroke="#16a34a" stroke-width="3"/>
+          </g>
+          
+          <!-- Large checkmark -->
+          <path d="M 60 75 L 85 100 L 140 50" stroke="#16a34a" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          
+          <!-- Text -->
+          <text x="100" y="145" text-anchor="middle" fill="#16a34a" font-size="14" font-weight="bold">¡Postura Perfecta!</text>
+        </svg>
+      `;
+      break;
+  }
+
+  guideContainer.innerHTML = svgContent;
+}
+
 // 📊 F. Classification - Simple posture rule
 function classifyPose(pose) {
   if (!pose.keypoints) return;
@@ -262,6 +440,9 @@ function classifyPose(pose) {
     statusText.style.color = "#2ea043";
     setPosture(true); // PATCH ✔
 
+    // Show visual guide for correct posture
+    showVisualGuide("none");
+
     // Reset bad posture tracking
     if (badPostureStartTime !== null) {
     }
@@ -271,12 +452,24 @@ function classifyPose(pose) {
     setPosture(false);
 
     let feedback = "⚠️ ";
-    if (!isHorizontallyCentered) feedback += "Centra tu cabeza";
-    else if (!isUpright) feedback += "Endereza tu espalda";
-    else if (!shouldersAreLevel) feedback += "Nivela tus hombros";
+    let errorType = "none";
+
+    if (!isHorizontallyCentered) {
+      feedback += "Centra tu cabeza";
+      errorType = "horizontal";
+    } else if (!isUpright) {
+      feedback += "Endereza tu espalda";
+      errorType = "upright";
+    } else if (!shouldersAreLevel) {
+      feedback += "Nivela tus hombros";
+      errorType = "shoulders";
+    }
 
     statusText.textContent = feedback;
     statusText.style.color = "#e11d48";
+
+    // Show visual guide for the specific error
+    showVisualGuide(errorType);
 
     if (badPostureStartTime === null) {
       badPostureStartTime = Date.now();

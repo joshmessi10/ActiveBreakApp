@@ -228,6 +228,25 @@ main {
   color: var(--color-text-secondary);
 }
 
+/* --- Visual Guide Container --- */
+#visual-guide-container {
+  width: 200px;
+  height: 150px;
+  margin: 10px auto;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#visual-guide-container svg {
+  width: 100%;
+  height: 100%;
+}
+
 /* --- Modal base --- */
 .modal {
   position: fixed;
