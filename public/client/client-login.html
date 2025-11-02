@@ -184,6 +184,7 @@
             localStorage.setItem(
               LS_CURRENT_CLIENT,
               JSON.stringify({
+                id: result.user.id,
                 email: result.user.email,
                 fullName: result.user.fullName,
                 org: result.user.orgName,

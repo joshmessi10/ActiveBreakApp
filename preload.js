@@ -10,4 +10,24 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("auth:login", email, password),
   adminGetAllUsers: () => ipcRenderer.invoke("admin:get-all-users"),
   adminDeleteUser: (userId) => ipcRenderer.invoke("admin:delete-user", userId),
+
+  // Settings APIs
+  getSettings: (userId) => ipcRenderer.invoke("settings:get", userId),
+  saveSettings: (userId, settingsData) =>
+    ipcRenderer.invoke("settings:save", userId, settingsData),
+
+  // Stats APIs
+  getTotalStats: (userId) => ipcRenderer.invoke("stats:get-total", userId),
+  logSessionStats: (userId, correct, incorrect, alerts) =>
+    ipcRenderer.invoke("stats:log-session", userId, correct, incorrect, alerts),
+
+  // Event logging APIs
+  logPostureEvent: (userId, eventData) =>
+    ipcRenderer.invoke("event:log-posture", userId, eventData),
+  logAlertEvent: (userId, timestamp) =>
+    ipcRenderer.invoke("event:log-alert", userId, timestamp),
+
+  // Modal data API
+  getModalData: (userId, startDate, endDate) =>
+    ipcRenderer.invoke("stats:get-modal-data", userId, startDate, endDate),
 });

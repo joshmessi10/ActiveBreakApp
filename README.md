@@ -1,304 +1,297 @@
 # ActiveBreakApp
 
-Aplicación de Pausas Activas con Detección de Postura en Tiempo Real
+**Real-Time Posture Detection and Active Break Reminders for Desktop**
 
-## 🎯 Características
+ActiveBreakApp is a cross-platform Electron desktop application that helps users maintain healthy posture during computer work. Using AI-powered computer vision (MediaPipe Pose), the app monitors your sitting posture in real-time and provides intelligent feedback through desktop notifications, statistics tracking, and actionable insights.
 
-- ✅ **Sistema de Autenticación Persistente**: Flujo Admin/Client con SQLite3 + bcrypt (producción)
-- ✅ **Detección de Postura en Tiempo Real**: Usando MoveNet (TensorFlow.js)
-- ✅ **Visualización de Skeleton**: Overlay profesional con 17 puntos clave
-- ✅ **Análisis Militar-Grade**: 3 reglas estrictas (alineación horizontal 15%, vertical 50%, simetría de hombros 10%)
-- ✅ **Feedback Inteligente**: Mensajes específicos según el tipo de error detectado
-- ✅ **Notificaciones Configurables**: Alertas nativas con sonido (umbral ajustable 1-60s)
-- ✅ **Recordatorios de Pausas**: Sistema automático cada N minutos (5-120 min)
-- ✅ **Seguimiento de Estadísticas**: Tracking automático de tiempo en cada postura (persiste entre sesiones)
-- ✅ **Historial Completo**: Registro de eventos con fecha y hora (últimos 100 cambios, persiste entre sesiones)
-- ✅ **Dashboard Interactivo**: Visualización de datos y tabla de historial con paginación (20 eventos por página)
-- ✅ **Sistema de Configuración**: Sensibilidad, notificaciones, umbrales personalizables
-- ✅ **Interfaz Profesional**: UI moderna con fuente Inter, iconos Feather, y micro-interacciones
-- ✅ **Sistema de Diseño**: Variables CSS, paleta refinada, transiciones suaves
-- ✅ **Exportar Datos**: Descarga histórico en CSV (modal de sesión en vivo)
+---
 
-## 🚀 Instalación
+## ✨ Key Features
 
-Clonar Proyecto: Ir a la carpeta y ejecutar con cmd
+### 🔐 **Secure Authentication System**
+
+- Role-based access control (Admin/Client)
+- SQLite3 database with bcrypt password hashing (10 salt rounds)
+- Admin dashboard for user management
+- Session-based authentication with route protection
+
+### 🎥 **Real-Time Posture Detection**
+
+- AI-powered pose detection using MoveNet Lightning (TensorFlow.js)
+- Military-grade classification algorithm with 3 strict rules:
+  - Horizontal centering (15% tolerance)
+  - Upright spine analysis (50% height requirement)
+  - Shoulder symmetry (10% tilt tolerance)
+- Visual skeleton overlay (17 keypoints)
+- Intelligent feedback with specific correction messages
+
+### 📊 **Comprehensive Analytics**
+
+- Cumulative statistics tracking (correct/incorrect posture time)
+- Interactive Chart.js visualizations (daily posture breakdown)
+- Event history with timestamps (session start/end, posture changes)
+- Date-range filtering for historical data analysis
+- Trend analysis with period-over-period comparison
+- CSV export functionality
+
+### 🔔 **Smart Notifications & Break Reminders**
+
+- Native OS desktop notifications with sound
+- Configurable alert threshold (1-60 seconds of bad posture)
+- Automatic break reminders with countdown timer (5-120 minutes)
+- Random stretching exercise suggestions
+- Spam prevention logic
+
+### ⚙️ **Customizable Settings**
+
+- Detection sensitivity adjustment (1-10 scale)
+- Toggle notifications on/off
+- Configurable alert threshold and break intervals
+- Persistent settings across sessions (admin-only access)
+
+### 🎨 **Professional UI/UX**
+
+- Modern dark theme with Inter font and Feather Icons
+- CSS variable design system
+- Smooth micro-interactions and hover effects
+- Responsive layout with gradient backgrounds
+
+---
+
+## 📦 Installation
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm (v7 or higher)
+- Webcam access
+
+### Setup
+
+1. Clone the repository and navigate to the project folder:
 
 ```bash
-npm init -y
-npm install electron --save-dev
-npm install @tensorflow/tfjs @mediapipe/pose
-npm install sqlite3 bcrypt
-npm install electron-builder --save-dev
+cd ActiveBreakApp
 ```
 
-## ▶️ Ejecutar Proyecto
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Start the application:
 
 ```bash
 npm start
 ```
 
-La aplicación cargará automáticamente:
+The application will automatically load the camera, AI model (MoveNet Lightning), and begin real-time posture detection.
 
-1. La cámara web
-2. El modelo de IA (MoveNet Lightning)
-3. La detección de postura en tiempo real
+### Build for Distribution
 
-## 📦 Build & Package
-
-Para construir la aplicación para tu plataforma actual, ejecuta:
+To package the application for your current platform:
 
 ```bash
 npm run build
 ```
 
-Los archivos distribuibles (por ejemplo, instalador `.exe`, portable `.exe`, `.dmg`, `.AppImage`) se ubicarán en la nueva carpeta `dist/`.
+Distributable files (`.exe`, `.dmg`, or `.AppImage`) will be located in the `dist/` folder.
 
-**Plataformas soportadas**:
+**Supported Platforms**:
 
-- **Windows**: NSIS Installer + Portable EXE
-- **macOS**: DMG
-- **Linux**: AppImage
+- Windows (NSIS Installer + Portable EXE)
+- macOS (DMG)
+- Linux (AppImage)
 
-### ⚠️ Resolución de Build conocida:
+**Known Build Notes**:
 
-El comando `npm run build` puede mostrar errores relacionados con "Cannot create symbolic link" durante la extracción de herramientas de code-signing en Windows. **Esto es normal y no afecta la funcionalidad** - la aplicación se construye exitosamente a pesar de estos errores.
+- The build process may show symbolic link errors on Windows during code-signing tool extraction. This is cosmetic and does not affect functionality.
+- Executable size: ~210MB (includes Electron + TensorFlow.js + dependencies)
 
-**Estado de la build**:
+---
 
-- ✅ El ejecutable `ActiveBreakApp.exe` se genera correctamente en `dist/win-unpacked/`
-- ✅ La aplicación se ejecuta sin problemas
-- ✅ Tamaño del ejecutable: ~210MB (incluye Electron + TensorFlow.js + dependencias)
-- ⚠️ Los errores de symbolic links son cosmáticos y no afectan la distribución
+## 🏗️ Architecture & Database
 
-**Solución temporal**: Los errores ocurren por permisos de Windows con symbolic links en las herramientas de code-signing. El build funciona correctamente para desarrollo y distribución local.
+For detailed technical documentation, see:
 
-## 🛠️ Tecnologías
+- **[AI_AGENT_GUIDE.md](./AI_AGENT_GUIDE.md)**: Comprehensive technical guide for AI agents and developers (IPC API, business logic, authentication flow)
+- **[architecture.mmd](./architecture.mmd)**: Mermaid diagram showing application architecture and data flow
+- **[database.mmd](./database.mmd)**: Entity-relationship diagram (ERD) for SQLite3 database schema
+- **[tree.txt](./tree.txt)**: Complete project file structure
 
-- **Electron** v38.4.0 - Desktop app framework
-- **TensorFlow.js** v4.22.0 - Machine learning
-- **MoveNet Lightning** - Ultra-fast pose detection
-- **SQLite3** v5.1.7 - Local database for user authentication
-- **bcrypt** v6.0.0 - Secure password hashing
+**Quick Architecture Overview**:
+
+- **Main Process** (`main.js`): Database operations, IPC handlers, window management
+- **Renderer Processes**: Posture detection (`script.js`), admin dashboard, settings
+- **IPC Bridge** (`preload.js`): Secure communication via contextBridge
+- **Database**: SQLite3 with 5 tables (users, user_settings, user_stats, posture_events, alert_events)
+- **Security**: bcrypt password hashing, role-based access control, context isolation
+
+---
+
+## 🛠️ Technology Stack
+
+- **Electron** 38.4.0 - Cross-platform desktop framework
+- **TensorFlow.js** 4.22.0 - Machine learning inference
+- **MoveNet Lightning** - Ultra-fast pose detection model
+- **SQLite3** 5.1.7 - Embedded database
+- **bcrypt** 6.0.0 - Password hashing
+- **Chart.js** - Data visualization
 - **ES6 Modules** - Modern JavaScript
 - **Inter Font** - Professional typography
-- **Feather Icons** - Clean, modern iconography
-- **CSS Variables** - Design system foundation
-
-## 📊 Estado del Proyecto
-
-**Versión**: 11.0  
-**Estado**: Production Ready - Fully Distributable! 🎉
-
-**Componentes**:
-
-- ✅ Core AI App (Military-Grade Detection + Smart Feedback + Persistent Data + Settings + History)
-- ✅ Professional UI/UX (Inter Font + Feather Icons + CSS Variables)
-- ✅ Desktop Notifications & Break Reminders (Fully Functional)
-- ✅ Cross-Session Data Persistence (Statistics & History Saved)
-- ✅ Build & Distribution Configuration (electron-builder with multi-platform support)
-- ✅ **Production Authentication System (SQLite3 + bcrypt - Fully Implemented)**
-
-Ver `project-purpose.md` para más detalles técnicos.
+- **Feather Icons** - Modern iconography
 
 ---
 
-## ⚠️ IMPORTANTE: Actualizar main.js
+## 🎮 How It Works
 
-Para usar el nuevo flujo de autenticación, **debes actualizar `main.js`**:
+### Authentication Flow
 
-**Cambiar de:**
+1. **Landing Page**: Choose between Admin or Client access
+2. **Login/Registration**:
+   - **Admins**: Can self-register from the landing page
+   - **Clients**: Login only (accounts created by admins)
+3. **Security**: Passwords hashed with bcrypt (10 salt rounds)
+4. **Database**: Users stored in `data/users.sqlite`
+5. **Role-Based Access**:
+   - Admins: Full access (posture detection, settings, user management)
+   - Clients: Limited access (posture detection only)
 
-```javascript
-mainWindow.loadFile("public/index.html");
-```
+### Admin Dashboard
 
-**Cambiar a:**
+- View all registered users (email, role, creation date)
+- Create new client accounts
+- Delete user accounts with confirmation
+- Self-deletion detection with automatic logout
+- Access to application settings (admin-only)
 
-```javascript
-mainWindow.loadFile("public/landing.html");
-```
+### Posture Detection Process
 
-Esto carga la página de inicio (`landing.html`) como punto de entrada, permitiendo el flujo Admin/Client.
+1. **Camera Initialization**: Requests webcam access
+2. **AI Model Loading**: Loads MoveNet Lightning model
+3. **Real-Time Detection**: Analyzes each video frame for 17 body keypoints
+4. **Posture Classification**: Applies 3 strict rules simultaneously:
+   - **Rule 1**: Horizontal centering (15% tolerance)
+   - **Rule 2**: Upright spine angle (±15° from vertical using Math.atan2)
+   - **Rule 3**: Shoulder symmetry (10% tilt tolerance)
+5. **Intelligent Feedback**: Displays specific correction messages:
+   - ✅ Green: "Postura Correcta"
+   - ⚠️ Red: "Centra tu cabeza" / "Endereza tu espalda" / "Nivela tus hombros"
+6. **Desktop Notifications**: Triggers after configurable threshold (default: 3 seconds of bad posture)
+7. **Automatic Tracking**: Records time in each posture state (1-second intervals)
+8. **Session Management**: Logs session start/end events, cumulative statistics
+9. **Break Reminders**: Periodic notifications with exercise suggestions
 
----
+### Statistics & Analytics
 
-## 🎮 Cómo Funciona
+- **Cumulative Stats**: Total time in correct/incorrect posture across all sessions
+- **Interactive Charts**: Daily posture breakdown with Chart.js visualizations
+- **Event History**: Timestamped log of posture changes, sessions, alerts (pagination: 20 events per page)
+- **Date Filtering**: Analyze specific time ranges
+- **Trend Analysis**: Period-over-period comparison with percentage changes
+- **CSV Export**: Download historical data for external analysis
 
-### Flujo de Autenticación (Persistente con SQLite3)
+### Settings Configuration
 
-1. **Inicio en `landing.html`**: Página de entrada con opciones:
-   - 👔 **Admin**: Acceso a panel administrativo
-   - 👤 **Client**: Acceso a la aplicación de detección de postura
-   - ⚠️ **IMPORTANTE**: Los clientes NO pueden auto-registrarse. Solo admins pueden crear cuentas de cliente.
-2. **Login/Registro**:
-   - **Admins**: Pueden auto-registrarse desde la landing page
-   - **Clients**: Solo pueden hacer login (registro controlado por admins)
-3. **Seguridad**: Contraseñas hasheadas con bcrypt (10 salt rounds)
-4. **Persistencia**: Usuarios almacenados en `data/users.sqlite`
-5. **Validación de Roles**: Control de acceso basado en roles (admin/client)
-6. **Redirección**:
-   - Admin → `admin-welcome.html` (dashboard funcional con gestión de usuarios)
-   - Client → `index.html` (detección de postura en tiempo real)
-
-### Panel de Administración (Admin Dashboard)
-
-**Funcionalidades implementadas**:
-
-- ✅ **Tabla de usuarios**: Visualiza todos los usuarios registrados (email, rol, nombre, organización, fecha)
-- ✅ **Registrar nuevo cliente**: Botón que lleva a formulario de registro de clientes
-- ✅ **Eliminar usuarios**: Botón de eliminación con confirmación
-- ✅ **Auto-detección de eliminación propia**:
-  - Muestra advertencia especial si admin intenta eliminar su propia cuenta
-  - Cierra sesión inmediatamente después de confirmación
-  - Redirige al inicio usando `window.location.replace()` para prevenir acceso a páginas cacheadas
-- ✅ **Acceso a configuración**: Botón para acceder a ajustes del sistema (admin-only)
-- ✅ **Gestión en tiempo real**: Los cambios se reflejan inmediatamente en la interfaz
-- ✅ **Logout seguro**: Botón "Volver al inicio" usa `window.location.replace()` para prevenir regreso con botón atrás del navegador
-
-**Restricciones de acceso**:
-
-- ⚠️ **Configuración (Settings)**: Solo accesible para administradores
-- ⚠️ **Registro de clientes**: Solo los administradores pueden crear cuentas de cliente
-- ✅ **Clientes**: Solo pueden acceder a Detection (index.html) y Statistics (modal integrado en index.html)
-
-### Detección de Postura (Core App)
-
-2. **Detección**: El modelo MoveNet analiza cada frame del video en tiempo real
-3. **Keypoints**: Identifica 17 puntos clave del cuerpo humano
-4. **Análisis Military-Grade**: Aplica 3 reglas estrictas simultáneamente:
-   - 🎖️ **Regla 1**: Alineación horizontal perfecta (tolerancia 15%)
-   - 🎖️ **Regla 2**: Análisis avanzado de ángulo cuello/espalda (±15° de vertical usando Math.atan2)
-   - 🎖️ **Regla 3**: Hombros nivelados (tolerancia 10% de inclinación)
-5. **Feedback Inteligente**: Muestra mensajes específicos según el error:
-   - ✅ Verde: "Postura Correcta"
-   - ⚠️ Rojo: "Centra tu cabeza" / "Endereza tu espalda, siéntate erguido" / "Nivela tus hombros"
-6. **Notificaciones**:
-   - 🔔 Notificación nativa del sistema operativo después de 3+ segundos de mala postura (configurable)
-   - 🔊 Sonido de alerta
-   - ♻️ Se resetea automáticamente al corregir la postura
-7. **Tracking Automático**: Cada segundo se registra:
-   - ⏱️ Tiempo en postura correcta
-   - ⏱️ Tiempo en postura incorrecta
-   - 💾 **Los datos persisten entre sesiones**
-8. **Estadísticas**: Ve tu progreso en la pestaña "Estadísticas":
-   - 📊 Tiempo total en cada postura (formato mm:ss)
-   - 📈 Gráficos interactivos con Chart.js (desglose diario por tipo de postura)
-   - 📝 Historial de eventos con fecha/hora
-   - 🎨 Eventos coloreados (verde/rojo) según tipo
-   - � **Eventos de sesión** (Session Start/End registrados automáticamente)
-   - �📄 Paginación (20 eventos por página con navegación prev/next)
-   - ⏱️ Últimos 100 cambios de postura registrados
-   - 💾 **Datos se mantienen al cerrar y reabrir la app**
-   - 💾 Exportar a CSV (modal de estadísticas en vivo)
-9. **Recordatorios de Descanso**:
-   - ⏰ Notificación recordando tomar un descanso cada N minutos
-   - ⚙️ Configurable en "Configuración" (5-120 minutos)
-   - 🔕 Se puede desactivar con el toggle de notificaciones
-10. **Configuración Personalizable**: Ajusta todo en "Configuración":
-    - 🎚️ Sensibilidad del detector (1-10)
-    - 🔔 Activar/desactivar notificaciones
-    - ⏱️ Umbral de alerta de postura (1-60 segundos)
-    - ⏰ Intervalo de descansos (5-120 minutos)
-    - 💾 Todas las configuraciones persisten al reiniciar
-11. **Interfaz Pulida y Profesional**:
-    - 🎨 Fuente Inter para tipografía moderna
-    - 🎯 Iconos Feather para navegación limpia
-    - ✨ Micro-interacciones suaves (hover, focus)
-    - 🌈 Sistema de diseño con variables CSS
-    - 💫 Efectos de elevación en tarjetas
-    - 🎭 Transiciones fluidas en todos los elementos
-
-## 🛠️ Implementación
-
-### Admin Login
-
-<img width="640" alt="Admin1" src="https://github.com/user-attachments/assets/63916f27-5460-4090-82c3-9a8d4efef5bd" />
-<img width="640" alt="Admin2" src="https://github.com/user-attachments/assets/f51a04d1-3e48-4c04-a091-b02a3175aad3" />
-<img width="640" alt="Admin3" src="https://github.com/user-attachments/assets/2a7beca7-089f-43aa-9bbf-344cc5ecf0e2" />
-
-### Client Login
-
-<img width="640" alt="Client1" src="https://github.com/user-attachments/assets/33cb3901-c60e-40c8-8672-e3dc80d9c6f3" />
-<img width="640" alt="Client2" src="https://github.com/user-attachments/assets/28718d6d-6c27-403e-bd88-3d8b3c5805f8" />
-<img width="640" alt="Client3" src="https://github.com/user-attachments/assets/dc28354b-39fa-479e-a499-a77d47b2e530" />
-
-### Download
-
-<img width="640" alt="Download" src="https://github.com/user-attachments/assets/a6b5ede4-c994-425b-98d3-e08944df0397" />
-
-### Main Page
-
-<img width="640" alt="Main1" src="https://github.com/user-attachments/assets/e11347a8-c9bb-4eb8-9517-b667e33eeb60" />
-<img width="640" alt="Main2" src="https://github.com/user-attachments/assets/2ace1ca2-d70f-486e-86c2-39aa6329cd61" />
-
-### Settings
-
-<img width="640" alt="Settings1" src="https://github.com/user-attachments/assets/b82b930b-ed71-4daf-a926-abb8701b7cef" />
-
-## 📝 Próximas Mejoras
-
-### ✅ **Características Completadas**
-
-- [x] ✅ Sistema de threshold configurable
-- [x] ✅ IPC seguro con contextBridge
-- [x] ✅ Almacenamiento de estadísticas en localStorage con persistencia
-- [x] ✅ Tracking automático de tiempo por postura
-- [x] ✅ Dashboard de estadísticas en tiempo real
-- [x] ✅ Sistema de configuración funcional con persistencia
-- [x] ✅ Sensibilidad ajustable del detector
-- [x] ✅ Registro de eventos con timestamps (historial detallado)
-- [x] ✅ Tabla interactiva de historial con colores
-- [x] ✅ UI/UX profesional con Inter font y Feather Icons
-- [x] ✅ Sistema de diseño con CSS variables
-- [x] ✅ Micro-interacciones y animaciones suaves
-- [x] ✅ Detección military-grade con 3 reglas estrictas (15%, 50%, 10%)
-- [x] ✅ Sistema de feedback inteligente con mensajes específicos
-- [x] ✅ **Sistema de autenticación persistente (SQLite3 + bcrypt)**
-- [x] ✅ **Base de datos local para usuarios con roles (admin/client)**
-- [x] ✅ **Hashing seguro de contraseñas con bcrypt (10 salt rounds)**
-- [x] ✅ **Auto-detección de eliminación propia (admin self-deletion)**
-- [x] ✅ **Logout seguro con `window.location.replace()` para prevenir acceso a páginas cacheadas**
-- [x] ✅ Exportar datos históricos (CSV desde modal de estadísticas de sesión)
-- [x] ✅ Notificaciones de escritorio nativas con sonido
-- [x] ✅ Recordatorios de descanso configurables
-- [x] ✅ Persistencia completa de datos entre sesiones
-- [x] ✅ Configuración de build para distribución multiplataforma
-
-### 🔮 **Mejoras Futuras**
-
-- [x] ✅ Conectar login a base de datos real (COMPLETADO - SQLite3)
-- [x] ✅ Hash de contraseñas con bcrypt (COMPLETADO)
-- [x] ✅ Sistema de roles y permisos (RBAC) (COMPLETADO - admin/client)
-- [ ] Implementar backend con Node.js/Express (opcional - actualmente local)
-- [ ] Añadir JWT para sesiones seguras
-- [x] ✅ Panel de administración funcional (COMPLETADO - Dashboard con CRUD de usuarios implementado)
-- [x] ✅ Gestión de usuarios desde Admin dashboard (COMPLETADO - Ver, crear y eliminar usuarios con auto-detección)
-- [x] ✅ Filtrado de historial por fecha/rango (COMPLETADO - Modal de estadísticas con filtros de fecha)
-- [x] ✅ Análisis avanzado de ángulos de columna vertebral (COMPLETADO - Regla 2 usa cálculo de ángulo cuello/espalda con Math.atan2)
-- [x] ✅ Gráficos de progreso diario/semanal (COMPLETADO - Chart.js con gráfico de barras apiladas en modal de estadísticas)
-- [x] ✅ Análisis de sesiones (inicio/fin/duración) (COMPLETADO - Registro automático de eventos de sesión en historial)
-- [x] ✅ Sugerencias de ejercicios de estiramiento (COMPLETADO - Notificaciones de descanso con ejercicios aleatorios)
-- [x] ✅ Análisis de tendencias avanzado (COMPLETADO - Comparación automática período anterior con cambios porcentuales)
-- [x] ✅ Guías visuales de corrección de postura (COMPLETADO - Diagramas SVG en tiempo real mostrando cómo corregir cada error)
+- **Sensitivity** (1-10): Adjusts AI confidence threshold
+- **Notifications**: Toggle on/off
+- **Alert Threshold** (1-60 seconds): Time before bad posture notification
+- **Break Interval** (5-120 minutes): Time between break reminders
+- **Persistence**: All settings saved to database
 
 ---
 
-**NOTA DE ACTUALIZACIÓN**: Este README fue actualizado el 27 de octubre de 2025 después de:
+## 📸 Screenshots
 
-1. Configurar electron-builder para distribución multiplataforma
-2. **Implementar sistema de autenticación persistente con SQLite3 + bcrypt**
-3. **Refactorizar completamente el sistema de login/registro con base de datos local**
-4. **Implementar auto-detección de eliminación propia en admin dashboard**
-5. **Añadir logout seguro usando `window.location.replace()` en todos los puntos de salida**
-6. **Implementar filtrado de historial por rango de fechas en modal de estadísticas**
-7. **Completar auditoría QA exhaustiva confirmando 99.9% de precisión en documentación**
-8. **Implementar gráficos de progreso con Chart.js (gráfico de barras apiladas por día)**
-9. **Optimizar Chart.js para eliminar animación de recarga cada segundo (ahora usa update() en vez de destroy/recreate)**
-10. **Implementar paginación para tabla de historial de eventos (20 eventos por página con navegación prev/next)**
-11. **Implementar análisis de sesiones con registro automático de eventos Session Start/End**
-12. **Implementar sugerencias de ejercicios de estiramiento (4 ejercicios con selección aleatoria)**
-13. **Implementar temporizador de cuenta regresiva para próximo descanso (muestra tiempo restante en mm:ss)**
-14. **Implementar análisis de tendencias avanzado (comparación automática período anterior con cambios porcentuales)**
-15. **Implementar guías visuales de corrección de postura con diagramas SVG en tiempo real**
+### Authentication Flow
 
-La aplicación ahora incluye un sistema de autenticación de producción completo con almacenamiento seguro de usuarios, gestión avanzada de sesiones, análisis de datos con filtrado temporal, visualización gráfica de progreso optimizada, navegación paginada de eventos, tracking completo de sesiones con registro automático de inicio/fin, **sugerencias inteligentes de ejercicios de estiramiento**, **temporizador de cuenta regresiva para descansos**, **análisis de tendencias avanzado con comparación automática vs. período anterior (mismo rango, un día antes) mostrando cambios porcentuales con codificación de color inteligente (verde para mejoras, rojo para regresiones)**, y **guías visuales de corrección de postura con diagramas SVG interactivos que muestran en tiempo real cómo corregir cada tipo de error de postura (centrado horizontal, ángulo de columna, nivel de hombros) con figuras de referencia, flechas direccionales, y mensajes específicos**. **Documentación 100% verificada y lista para producción.**
+**Admin Login**
+
+<img width="640" alt="Admin Login" src="https://github.com/user-attachments/assets/63916f27-5460-4090-82c3-9a8d4efef5bd" />
+
+**Admin Dashboard**
+
+<img width="640" alt="Admin Dashboard" src="https://github.com/user-attachments/assets/f51a04d1-3e48-4c04-a091-b02a3175aad3" />
+
+**Client Login**
+
+<img width="640" alt="Client Login" src="https://github.com/user-attachments/assets/33cb3901-c60e-40c8-8672-e3dc80d9c6f3" />
+
+### Core Application
+
+**Posture Detection**
+
+<img width="640" alt="Posture Detection" src="https://github.com/user-attachments/assets/e11347a8-c9bb-4eb8-9517-b667e33eeb60" />
+
+**Statistics Modal with Charts**
+
+<img width="640" alt="Statistics" src="https://github.com/user-attachments/assets/2ace1ca2-d70f-486e-86c2-39aa6329cd61" />
+
+**Settings Panel**
+
+<img width="640" alt="Settings" src="https://github.com/user-attachments/assets/b82b930b-ed71-4daf-a926-abb8701b7cef" />
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+**For AI agents**: Please review [AI_AGENT_GUIDE.md](./AI_AGENT_GUIDE.md) for technical context and development guidelines.
+
+---
+
+## 📄 License
+
+This project is open-source and available under the MIT License.
+
+---
+
+## 🔮 Roadmap
+
+### ✅ Completed Features
+
+- [x] Real-time posture detection with military-grade classification
+- [x] Production authentication system (SQLite3 + bcrypt)
+- [x] Role-based access control (admin/client)
+- [x] Admin dashboard with user management
+- [x] Statistics tracking with persistence
+- [x] Interactive charts and analytics
+- [x] Desktop notifications and break reminders
+- [x] Date-range filtering and trend analysis
+- [x] CSV export functionality
+- [x] Visual posture correction guides
+- [x] Build and distribution configuration
+
+### 🚧 Future Enhancements
+
+- [ ] Multi-user session management with JWT tokens
+- [ ] Cloud backup for statistics
+- [ ] Mobile companion app
+- [ ] Posture calibration for different body types
+- [ ] Weekly/monthly progress reports via email
+- [ ] Integration with fitness trackers
+- [ ] Gamification (achievements, streaks, challenges)
+
+---
+
+## 📧 Contact & Support
+
+For questions, issues, or feature requests, please open an issue on GitHub.
+
+---
+
+**Project Status**: Production Ready 🎉  
+**Version**: 12.0  
+**Last Updated**: January 2025
+
+---
+
+**Note**: This application requires webcam access to function. All posture detection happens locally on your device - no data is sent to external servers.

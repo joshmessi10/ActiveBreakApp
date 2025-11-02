@@ -1,0 +1,41 @@
+erDiagram
+    users ||--o{ user_settings : has
+    users ||--o{ user_stats : has
+    users ||--o{ posture_events : logs
+    users ||--o{ alert_events : logs
+
+    users {
+        INTEGER id PK "AUTO_INCREMENT"
+        TEXT username UK "UNIQUE, NOT NULL"
+        TEXT password "NOT NULL (bcrypt hashed)"
+        TEXT role "CHECK('admin', 'client')"
+        INTEGER created_at "timestamp"
+    }
+
+    user_settings {
+        INTEGER user_id FK "UNIQUE, NOT NULL"
+        INTEGER sensitivity "DEFAULT 5"
+        INTEGER notificationsEnabled "DEFAULT 1"
+        INTEGER alertThreshold "DEFAULT 3"
+        INTEGER breakInterval "DEFAULT 30"
+    }
+
+    user_stats {
+        INTEGER user_id FK "UNIQUE, NOT NULL"
+        INTEGER correctSeconds "DEFAULT 0"
+        INTEGER incorrectSeconds "DEFAULT 0"
+        INTEGER alertsCount "DEFAULT 0"
+    }
+
+    posture_events {
+        INTEGER id PK "AUTO_INCREMENT"
+        INTEGER user_id FK "NOT NULL"
+        INTEGER timestamp "NOT NULL"
+        TEXT type "CHECK('Correcta','Incorrecta','Session Start','Session End')"
+    }
+
+    alert_events {
+        INTEGER id PK "AUTO_INCREMENT"
+        INTEGER user_id FK "NOT NULL"
+        INTEGER timestamp "NOT NULL"
+    }

@@ -1,17 +1,18 @@
 %% ActiveBreakApp - System Architecture Diagram
-%% Version: 2.0 (QA Audit Edition)
-%% Last Updated: October 27, 2025
-%% Status: 100% Verified - All flows match actual implementation
+%% Version: 3.0 (Database Migration Edition)
+%% Last Updated: January 2025
+%% Status: 100% Production Ready - Database-based architecture
 %% 
 %% Key Features Visualized:
-%% - SQLite3 + bcrypt authentication with 5 IPC handlers
-%% - Admin-only client registration flow
-%% - Self-deletion detection in admin dashboard
-%% - Session guards with role-based access control
+%% - SQLite3 database with 5 tables (users, user_settings, user_stats, posture_events, alert_events)
+%% - bcrypt authentication with role-based access control
+%% - 8 IPC handlers for database operations (settings, stats, events, modal data)
+%% - Admin dashboard with user management CRUD
+%% - Session-based tracking with automatic event logging
 %% - MoveNet AI with 3-rule military-grade classification
-%% - Data persistence across sessions via localStorage
-%% - Native OS notifications with break reminders
-%% - CSV export functionality in session modal
+%% - Chart.js visualizations with trend analysis
+%% - Native OS notifications with break reminders and exercise suggestions
+%% - CSV export functionality in statistics modal
 
 graph TB
     %% Electron Main Process
@@ -33,25 +34,25 @@ graph TB
     CoreApp["<b>Core AI App</b><br/>(index.html)<br/>---<br/>• Video feed<br/>• Canvas overlay<br/>• Status display<br/>• Session guard"]
     
     %% Core Logic
-    ScriptJS["<b>AI Logic</b><br/>(script.js)<br/>---<br/>• MoveNet Lightning<br/>• 17 keypoints detection<br/>• 3-rule validation (15%, 50%, 10%)<br/>• Event logging (max 100)<br/>• Notification triggers<br/>• Data persistence<br/>• CSV export (session)<br/>• Session stats modal"]
+    ScriptJS["<b>AI Logic</b><br/>(script.js)<br/>---<br/>• MoveNet Lightning<br/>• 17 keypoints detection<br/>• 3-rule validation (15%, 50%, 10%)<br/>• Database event logging<br/>• Session tracking (start/end)<br/>• Notification triggers<br/>• Statistics modal w/ Chart.js<br/>• CSV export<br/>• Date-range filtering<br/>• Trend analysis"]
     
-    SettingsJS["<b>Settings</b><br/>(settings.js)<br/>---<br/>• Load/save config<br/>• localStorage persistence<br/>• 4 settings (sensitivity,<br/>  notifications, threshold,<br/>  break interval)<br/>• Admin-only access<br/>• Session guard"]
+    SettingsJS["<b>Settings</b><br/>(settings.js)<br/>---<br/>• Load/save via IPC<br/>• Database persistence<br/>• 4 settings (sensitivity,<br/>  notifications, threshold,<br/>  break interval)<br/>• Admin-only access<br/>• Session guard"]
     
     AuthGuard["<b>Session Guard</b><br/>(auth-guard.js)<br/>---<br/>• Route protection<br/>• Role validation<br/>• Auto-redirect"]
     
     AdminDashboardJS["<b>Admin Logic</b><br/>(admin-dashboard.js)<br/>---<br/>• Load users<br/>• Delete users<br/>• Self-deletion detection<br/>• Table rendering<br/>• Logout with replace()"]
     
     %% IPC Bridge
-    Preload["<b>IPC Bridge</b><br/>(preload.js)<br/>---<br/>• contextBridge API<br/>• Secure IPC channels<br/>• window.api methods:<br/>  - sendNotification()<br/>  - authRegister()<br/>  - authLogin()<br/>  - adminGetAllUsers()<br/>  - adminDeleteUser()"]
+    Preload["<b>IPC Bridge</b><br/>(preload.js)<br/>---<br/>• contextBridge API<br/>• Secure IPC channels<br/>• window.api methods (8):<br/>  - getSettings()<br/>  - saveSettings()<br/>  - getTotalStats()<br/>  - logSessionStats()<br/>  - logPostureEvent()<br/>  - logAlertEvent()<br/>  - getModalData()<br/>  - sendNotification()"]
     
     %% Notifications
     Notifications["<b>Native Notifications</b><br/>---<br/>• OS-level alerts<br/>• Sound enabled<br/>• Posture warnings<br/>• Break reminders"]
     
     %% Database
-    Database[("<b>SQLite3 Database</b><br/>(data/users.sqlite)<br/>---<br/>• users table<br/>• bcrypt password_hash<br/>• Role-based access<br/>• Persistent storage")]
+    Database[("<b>SQLite3 Database</b><br/>(data/users.sqlite)<br/>---<br/>• users (auth + roles)<br/>• user_settings (4 fields)<br/>• user_stats (cumulative)<br/>• posture_events (1:N)<br/>• alert_events (1:N)<br/>• bcrypt password hashing<br/>• Foreign key constraints<br/>• Cascading deletes")]
     
     %% localStorage
-    LocalStorage[("<b>localStorage</b><br/>---<br/>• Settings (4 keys)<br/>• Time tracking (2 keys)<br/>• Event history (1 key)<br/>• Alerts history (1 key)<br/>• Session data (2 keys)<br/>• Data persists across sessions")]
+    LocalStorage[("<b>localStorage</b><br/>---<br/>• Session data only<br/>  (currentUser object)<br/>• Used for authentication<br/>• No persistent app data<br/>• All data in database")]
     
     %% Flow Connections
     MainProcess -->|loads| Landing
@@ -83,13 +84,23 @@ graph TB
     AdminDashboardJS -->|"IPC: admin:get-all-users"| Preload
     AdminDashboardJS -->|"IPC: admin:delete-user"| Preload
     
+    ScriptJS -->|"IPC: get-settings"| Preload
+    ScriptJS -->|"IPC: get-total-stats"| Preload
+    ScriptJS -->|"IPC: log-session-stats"| Preload
+    ScriptJS -->|"IPC: log-posture-event"| Preload
+    ScriptJS -->|"IPC: log-alert-event"| Preload
+    ScriptJS -->|"IPC: get-modal-data"| Preload
     ScriptJS -->|"IPC: notify:posture"| Preload
+    
+    SettingsJS -->|"IPC: get-settings"| Preload
+    SettingsJS -->|"IPC: save-settings"| Preload
+    
     Preload -->|"IPC messages"| MainProcess
     MainProcess -->|"Shows"| Notifications
-    MainProcess -->|"Query/Insert/Delete"| Database
+    MainProcess -->|"Query/Insert/Update"| Database
     
-    ScriptJS -.->|"Read/Write"| LocalStorage
-    SettingsJS -.->|"Read/Write"| LocalStorage
+    ScriptJS -.->|"Read session only"| LocalStorage
+    SettingsJS -.->|"Read session only"| LocalStorage
     AuthGuard -.->|"Read sessions"| LocalStorage
     AdminLogin -.->|"Write session"| LocalStorage
     ClientLogin -.->|"Write session"| LocalStorage
