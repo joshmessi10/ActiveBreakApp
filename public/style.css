@@ -942,3 +942,243 @@ footer {
 footer p {
   margin: 0;
 }
+
+/* ============================================
+   GUIDED BREAK (Interactive) STYLES
+   ============================================ */
+
+#break-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+}
+
+.break-modal {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  max-width: 1200px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.break-content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Camera Preview Section */
+.break-camera-preview {
+  position: relative;
+}
+
+#break-camera-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #1a1a2e;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+#break-camera-container video,
+#break-camera-container canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+#break-camera-container canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Instructions Section */
+.break-instructions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.break-modal h1 {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-text-primary);
+  font-size: 2rem;
+}
+
+#break-progress {
+  color: var(--color-text-secondary);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.break-exercise-card {
+  background: var(--color-bg-secondary);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.break-exercise-card h2 {
+  margin: 0 0 0.75rem 0;
+  color: var(--color-text-primary);
+  font-size: 1.5rem;
+}
+
+.break-exercise-card p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.break-validation {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+#break-status-text {
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  font-size: 1.2rem;
+  display: block;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.break-timer-container {
+  position: relative;
+  margin-top: 0.5rem;
+}
+
+.break-timer-bar {
+  width: 100%;
+  height: 24px;
+  background-color: var(--color-bg-tertiary);
+  border-radius: 12px;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--color-border);
+  transition: all 0.3s ease;
+}
+
+.break-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: transparent;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  text-shadow: none;
+}
+
+.pose-detected .break-countdown {
+  color: #10b981;
+  font-size: 2rem;
+  text-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+.break-timer-bar-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #6ee7b7 100%);
+  border-radius: 10px;
+  transform-origin: left;
+  transition: transform 1s linear;
+  transform: scaleX(0);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* State: Pose Detected */
+.break-exercise-card.pose-detected {
+  border-color: #10b981;
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.1) 0%,
+    rgba(110, 231, 183, 0.05) 100%
+  );
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.4), 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%,
+  100% {
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.4), 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(16, 185, 129, 0.6), 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.pose-detected #break-status-text {
+  color: #10b981;
+  font-size: 1.4rem;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.pose-detected .break-timer-bar {
+  border-color: #10b981;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1),
+    0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+/* Timer bar visible state */
+.break-timer-bar.active {
+  transform: scaleY(1);
+  opacity: 1;
+}
+
+#break-skip-btn {
+  margin-top: 1rem;
+  background-color: var(--color-bg-tertiary);
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+#break-skip-btn:hover {
+  background-color: var(--color-border);
+}
+
+/* Responsive: Stack on smaller screens */
+@media (max-width: 980px) {
+  .break-content-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .break-camera-preview {
+    order: 2;
+  }
+
+  .break-instructions {
+    order: 1;
+  }
+}

@@ -241,6 +241,43 @@
       </div>
     </div>
 
+    <!-- ===== Interactive Break Overlay ===== -->
+    <div id="break-overlay" style="display: none">
+      <div class="break-modal">
+        <div class="break-content-wrapper">
+          <!-- Camera Preview Section -->
+          <div class="break-camera-preview">
+            <div id="break-camera-container">
+              <!-- The actual camera elements will be moved here by JS -->
+            </div>
+          </div>
+
+          <!-- Instructions Section -->
+          <div class="break-instructions">
+            <h1 id="break-title">¡Hora de la Pausa!</h1>
+            <p id="break-progress">Ejercicio 1 de 4</p>
+
+            <div class="break-exercise-card" id="break-card">
+              <h2 id="break-exercise-name">[Nombre del Ejercicio]</h2>
+              <p id="break-exercise-desc">[Descripción del ejercicio...]</p>
+
+              <div class="break-validation">
+                <span id="break-status-text">Colócate en posición...</span>
+                <div class="break-timer-container">
+                  <div class="break-timer-bar" id="break-timer-bar"></div>
+                  <span id="break-countdown" class="break-countdown">10s</span>
+                </div>
+              </div>
+            </div>
+
+            <button id="break-skip-btn" class="btn btn-secondary">
+              Saltar Ejercicio
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <footer>
       <p>© 2025 Active Break — Versión de desarrollo</p>
     </footer>

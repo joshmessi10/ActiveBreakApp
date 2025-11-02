@@ -21,23 +21,33 @@ let sessionIncorrectSeconds = 0;
 let sessionAlertsCount = 0;
 let sessionStartTime = null;
 
-// 💪 Exercise Suggestions for Break Reminders
-const breakExercises = [
+// --- New Break Mode State ---
+let isInBreakMode = false;
+let currentExerciseIndex = 0;
+let poseHoldTimer = null; // Will be an interval
+let poseHoldTime = 0; // Milliseconds
+
+// --- New Guided Exercise Definitions ---
+const guidedBreakExercises = [
   {
-    name: "Giro de Cuello",
-    desc: "Gira tu cabeza lentamente de lado a lado durante 15 segundos.",
+    name: "Brazos Arriba",
+    desc: "Párate derecho y levanta ambos brazos rectos sobre tu cabeza.",
+    validationRule: "ARMS_UP",
   },
   {
-    name: "Estiramiento de Hombros",
-    desc: "Encoge tus hombros hacia tus orejas, mantén 5s y relaja.",
+    name: "Sentadillas",
+    desc: "Baja tu cuerpo doblando las rodillas, mantén la espalda recta y los brazos al frente.",
+    validationRule: "SQUAT",
   },
   {
-    name: "Estiramiento de Muñeca",
-    desc: "Extiende tu brazo y flexiona tu muñeca hacia arriba y abajo (10s).",
+    name: "Manos en las Rodillas",
+    desc: "Inclínate y coloca ambas manos sobre tus rodillas.",
+    validationRule: "HANDS_ON_KNEES",
   },
   {
-    name: "Mirada Lejana",
-    desc: "Enfoca tu vista en un objeto lejano (20m+) durante 20 segundos.",
+    name: "Toque de Pies",
+    desc: "Inclínate hacia adelante y trata de tocar tus pies o tobillos con las manos.",
+    validationRule: "TOUCH_TOES",
   },
 ];
 
@@ -52,6 +62,23 @@ const alertsCount = document.getElementById("alerts-count");
 const postureCard = document.getElementById("posture-card");
 const postureDetail = document.getElementById("posture-detail");
 const alertsCard = document.getElementById("alerts-card");
+
+// 🎯 Break Mode DOM Elements
+const breakOverlay = document.getElementById("break-overlay");
+const breakTitle = document.getElementById("break-title");
+const breakProgress = document.getElementById("break-progress");
+const breakCard = document.getElementById("break-card");
+const breakExerciseName = document.getElementById("break-exercise-name");
+const breakExerciseDesc = document.getElementById("break-exercise-desc");
+const breakStatusText = document.getElementById("break-status-text");
+const breakTimerBar = document.getElementById("break-timer-bar");
+const breakSkipBtn = document.getElementById("break-skip-btn");
+const breakCountdown = document.getElementById("break-countdown");
+
+// Create the timer bar fill element (it's not in HTML)
+const breakTimerFill = document.createElement("div");
+breakTimerFill.className = "break-timer-bar-fill";
+breakTimerBar.appendChild(breakTimerFill);
 
 // 🧠 B. Globals - AI and Canvas
 let detector = null;
@@ -225,7 +252,17 @@ async function detectPose() {
     if (poses && poses.length > 0) {
       const pose = poses[0];
       drawPose(pose);
-      classifyPose(pose);
+
+      // --- AI Logic Switch ---
+      if (isInBreakMode) {
+        // We are in a break, check exercise pose
+        const rule = guidedBreakExercises[currentExerciseIndex].validationRule;
+        classifyBreakPose(pose, rule);
+      } else {
+        // Not in a break, check sitting posture
+        classifyPose(pose);
+      }
+      // --- End of Logic Switch ---
     }
   } catch (err) {
     console.error("Detection error:", err);
@@ -624,16 +661,10 @@ function startDataCollection() {
       elapsedSeconds > 0 &&
       elapsedSeconds % breakIntervalSeconds === 0 &&
       elapsedSeconds !== lastBreakNotificationTime &&
-      window.api &&
-      window.api.sendNotification &&
-      userSettings.notificationsEnabled
+      !isInBreakMode
     ) {
-      const exercise =
-        breakExercises[Math.floor(Math.random() * breakExercises.length)];
-      window.api.sendNotification(
-        `¡Hora de un Descanso! (Ejercicio)`,
-        `Sugerencia: ${exercise.name} - ${exercise.desc}`
-      );
+      console.log("⏰ Break time reached! Starting guided break sequence.");
+      startBreakSequence();
       lastBreakNotificationTime = elapsedSeconds;
     }
   }, 1000);
@@ -1097,6 +1128,283 @@ window.addEventListener("DOMContentLoaded", () => {
     console.error("❌ IPC bridge NOT available! Notifications will not work.");
   }
 });
+
+// ==================================
+// === NEW GUIDED BREAK FUNCTIONS ===
+// ==================================
+
+/**
+ * Starts the guided break sequence.
+ */
+function startBreakSequence() {
+  isInBreakMode = true;
+  currentExerciseIndex = 0;
+  resetPoseHoldTimer();
+  loadExercise(currentExerciseIndex);
+
+  // Move camera elements to break overlay
+  const breakCameraContainer = document.getElementById(
+    "break-camera-container"
+  );
+  const originalCameraContainer = document.getElementById("camera-container");
+
+  // Store the original parent for restoration later
+  if (!window.originalCameraParent) {
+    window.originalCameraParent = originalCameraContainer;
+  }
+
+  // Move video and canvas to break container
+  breakCameraContainer.appendChild(video);
+  breakCameraContainer.appendChild(canvas);
+
+  breakOverlay.style.display = "flex";
+}
+
+/**
+ * Loads a specific exercise into the UI.
+ */
+function loadExercise(index) {
+  if (index >= guidedBreakExercises.length) {
+    endBreakSequence();
+    return;
+  }
+
+  const exercise = guidedBreakExercises[index];
+  breakProgress.textContent = `Ejercicio ${index + 1} de ${
+    guidedBreakExercises.length
+  }`;
+  breakExerciseName.textContent = exercise.name;
+  breakExerciseDesc.textContent = exercise.desc;
+
+  // Reset UI state
+  breakCard.classList.remove("pose-detected");
+  breakStatusText.textContent = "Colócate en posición...";
+  breakTimerFill.style.transform = "scaleX(0)";
+
+  // Update skip button
+  if (index === guidedBreakExercises.length - 1) {
+    breakSkipBtn.textContent = "¡Terminar!";
+  } else {
+    breakSkipBtn.textContent = "Saltar Ejercicio";
+  }
+}
+
+/**
+ * Ends the guided break sequence and resumes the app.
+ */
+function endBreakSequence() {
+  isInBreakMode = false;
+  resetPoseHoldTimer();
+
+  // Restore camera elements to original position
+  if (window.originalCameraParent) {
+    window.originalCameraParent.appendChild(video);
+    window.originalCameraParent.appendChild(canvas);
+  }
+
+  breakOverlay.style.display = "none";
+}
+
+/**
+ * Resets the 10-second pose hold timer.
+ */
+function resetPoseHoldTimer() {
+  if (poseHoldTimer) {
+    clearInterval(poseHoldTimer);
+    poseHoldTimer = null;
+  }
+  poseHoldTime = 0;
+
+  // Reset UI
+  breakCard.classList.remove("pose-detected");
+  breakStatusText.textContent = "Colócate en posición...";
+  breakTimerFill.style.transform = "scaleX(0)";
+  breakCountdown.textContent = "10s";
+}
+
+/**
+ * Called when a pose is successfully held for 10 seconds.
+ */
+function completeExercise() {
+  resetPoseHoldTimer();
+  currentExerciseIndex++;
+  loadExercise(currentExerciseIndex);
+}
+
+/**
+ * Handles clicks on the 'Skip' button.
+ */
+breakSkipBtn.addEventListener("click", () => {
+  // If on last exercise, button text is "Terminar!"
+  if (currentExerciseIndex >= guidedBreakExercises.length - 1) {
+    endBreakSequence();
+  } else {
+    // Skip to next
+    completeExercise();
+  }
+});
+
+/**
+ * NEW CLASSIFIER: Checks for guided break poses.
+ * Called 10x per second by detectPose.
+ */
+function classifyBreakPose(pose, rule) {
+  if (!pose || !pose.keypoints) {
+    resetPoseHoldTimer();
+    return;
+  }
+
+  // Extract keypoints by name
+  const getKp = (name) => pose.keypoints.find((kp) => kp.name === name);
+
+  const l_s = getKp("left_shoulder");
+  const r_s = getKp("right_shoulder");
+  const l_w = getKp("left_wrist");
+  const r_w = getKp("right_wrist");
+  const l_k = getKp("left_knee");
+  const r_k = getKp("right_knee");
+  const l_h = getKp("left_hip");
+  const r_h = getKp("right_hip");
+
+  let isPoseCorrect = false;
+  const conf = 0.3; // Confidence threshold
+
+  try {
+    switch (rule) {
+      case "ARMS_UP":
+        // Wrists must be above shoulders
+        if (
+          l_s &&
+          l_w &&
+          r_s &&
+          r_w &&
+          l_s.score > conf &&
+          l_w.score > conf &&
+          r_s.score > conf &&
+          r_w.score > conf
+        ) {
+          isPoseCorrect = l_w.y < l_s.y && r_w.y < r_s.y;
+        }
+        break;
+
+      case "SQUAT":
+        // Knees must be bent significantly (knees higher than hips)
+        // Hips lowered (hips below shoulders)
+        if (
+          l_s &&
+          r_s &&
+          l_h &&
+          r_h &&
+          l_k &&
+          r_k &&
+          l_s.score > conf &&
+          r_s.score > conf &&
+          l_h.score > conf &&
+          r_h.score > conf &&
+          l_k.score > conf &&
+          r_k.score > conf
+        ) {
+          const avgShoulderY = (l_s.y + r_s.y) / 2;
+          const avgHipY = (l_h.y + r_h.y) / 2;
+          const avgKneeY = (l_k.y + r_k.y) / 2;
+
+          // Check if hips are lowered (hips should be below shoulders)
+          const hipsLowered = avgHipY > avgShoulderY + 0.15; // 15% below shoulders
+
+          // Check if knees are bent (knees should be visible and lower than hips)
+          const kneesBent = avgKneeY > avgHipY;
+
+          isPoseCorrect = hipsLowered && kneesBent;
+        }
+        break;
+
+      case "HANDS_ON_KNEES":
+        // Wrists must be near knees (y)
+        if (
+          l_w &&
+          r_w &&
+          l_k &&
+          r_k &&
+          l_w.score > conf &&
+          r_w.score > conf &&
+          l_k.score > conf &&
+          r_k.score > conf
+        ) {
+          const yRange = Math.abs(l_k.y - r_k.y) + l_k.y * 0.2; // 20% Y-tolerance
+          isPoseCorrect =
+            Math.abs(l_w.y - l_k.y) < yRange &&
+            Math.abs(r_w.y - r_k.y) < yRange;
+        }
+        break;
+
+      case "TOUCH_TOES":
+        // Wrists must be near ankles/feet (below knees)
+        // Body bent forward
+        const l_a = getKp("left_ankle");
+        const r_a = getKp("right_ankle");
+
+        if (
+          l_w &&
+          r_w &&
+          l_k &&
+          r_k &&
+          l_a &&
+          r_a &&
+          l_s &&
+          r_s &&
+          l_h &&
+          r_h &&
+          l_w.score > conf &&
+          r_w.score > conf &&
+          l_k.score > conf &&
+          r_k.score > conf
+        ) {
+          // Check if wrists are below knees (reaching down)
+          const wristsLow = (l_w.y + r_w.y) / 2 > (l_k.y + r_k.y) / 2;
+
+          // Check if body is bent forward (hips higher than shoulders)
+          const avgShoulderY = (l_s.y + r_s.y) / 2;
+          const avgHipY = (l_h.y + r_h.y) / 2;
+          const bentForward = avgShoulderY > avgHipY - 0.1;
+
+          isPoseCorrect = wristsLow && bentForward;
+        }
+        break;
+    }
+  } catch (e) {
+    // If any keypoint is missing, score is too low, etc.
+    console.error("Error in classifyBreakPose:", e);
+    isPoseCorrect = false;
+  }
+
+  // --- Handle Timer Logic ---
+  if (isPoseCorrect) {
+    breakCard.classList.add("pose-detected");
+    breakStatusText.textContent = "¡Excelente, mantén la pose!";
+
+    if (poseHoldTimer === null) {
+      // This is the first frame the pose is correct, start the timer.
+      poseHoldTimer = setInterval(() => {
+        poseHoldTime += 1000; // Add 1 second
+
+        // Update timer bar (e.g., 2000ms / 10000ms = 0.2 = 20%)
+        let percent = poseHoldTime / 10000;
+        breakTimerFill.style.transform = `scaleX(${percent})`;
+
+        // Update countdown display
+        const secondsRemaining = Math.ceil((10000 - poseHoldTime) / 1000);
+        breakCountdown.textContent = `${secondsRemaining}s`;
+
+        if (poseHoldTime >= 10000) {
+          completeExercise();
+        }
+      }, 1000);
+    }
+  } else {
+    // Pose is incorrect, reset everything
+    resetPoseHoldTimer();
+  }
+}
 
 // Logout function for user dashboard
 async function logout() {
