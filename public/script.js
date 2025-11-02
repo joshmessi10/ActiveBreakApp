@@ -1113,6 +1113,7 @@ async function logout() {
     }
 
     localStorage.removeItem("ab_current_client");
+    localStorage.removeItem("ab_current_user"); // Also clear admin session
     window.location.replace("landing.html");
   } catch (e) {
     console.error("Error during logout:", e);

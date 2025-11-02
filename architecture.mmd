@@ -24,19 +24,19 @@ graph TB
     %% Admin Flow
     AdminLogin["<b>Admin Login</b><br/>(admin/admin-login.html)<br/>---<br/>• Authentication form<br/>• Database validation<br/>• Session guard"]
     AdminRegister["<b>Admin Register</b><br/>(admin/admin-register.html)<br/>---<br/>• Registration form<br/>• bcrypt hashing"]
-    AdminDashboard["<b>Admin Dashboard</b><br/>(admin/admin-welcome.html)<br/>---<br/>• User management UI<br/>• CRUD operations<br/>• Session guard"]
+    AdminDashboard["<b>Admin Dashboard</b><br/>(admin/admin-welcome.html)<br/>---<br/>• User management UI<br/>• CRUD operations<br/>• Navigation bar (home, register, settings, logout)<br/>• Session guard"]
     
     %% Client Flow
     ClientLogin["<b>Client Login</b><br/>(client/client-login.html)<br/>---<br/>• Authentication form<br/>• Database validation<br/>• Direct redirect to app"]
     ClientRegister["<b>Client Register</b><br/>(client/client-register.html)<br/>---<br/>• Registration form<br/>• bcrypt hashing"]
     
     %% Core AI App
-    CoreApp["<b>Core AI App</b><br/>(index.html)<br/>---<br/>• Video feed<br/>• Canvas overlay<br/>• Status display<br/>• Session guard"]
+    CoreApp["<b>Core AI App</b><br/>(index.html)<br/>---<br/>• Video feed<br/>• Canvas overlay<br/>• Status display<br/>• Client-only access<br/>• Session guard"]
     
     %% Core Logic
     ScriptJS["<b>AI Logic</b><br/>(script.js)<br/>---<br/>• MoveNet Lightning<br/>• 17 keypoints detection<br/>• 3-rule validation (15%, 50%, 10%)<br/>• Database event logging<br/>• Session tracking (start/end)<br/>• Notification triggers<br/>• Statistics modal w/ Chart.js<br/>• CSV export<br/>• Date-range filtering<br/>• Trend analysis"]
     
-    SettingsJS["<b>Settings</b><br/>(settings.js)<br/>---<br/>• Load/save via IPC<br/>• Database persistence<br/>• 4 settings (sensitivity,<br/>  notifications, threshold,<br/>  break interval)<br/>• Admin-only access<br/>• Session guard"]
+    SettingsJS["<b>Settings</b><br/>(settings.js)<br/>---<br/>• Load/save via IPC<br/>• Database persistence<br/>• 4 settings (sensitivity,<br/>  notifications, threshold,<br/>  break interval)<br/>• Role-agnostic access<br/>• Dynamic navigation<br/>• Session guard"]
     
     AuthGuard["<b>Session Guard</b><br/>(auth-guard.js)<br/>---<br/>• Route protection<br/>• Role validation<br/>• Auto-redirect"]
     

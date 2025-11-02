@@ -47,7 +47,9 @@ ActiveBreakApp is a cross-platform Electron desktop application that helps users
 - Detection sensitivity adjustment (1-10 scale)
 - Toggle notifications on/off
 - Configurable alert threshold and break intervals
-- Persistent settings across sessions (admin-only access)
+- Persistent settings across sessions
+- Accessible to both admin and client users
+- Each user manages their own personal settings
 
 ### 🎨 **Professional UI/UX**
 
@@ -156,15 +158,28 @@ For detailed technical documentation, see:
 4. **Database**: Users stored in `data/users.sqlite`
 5. **Role-Based Access**:
    - Admins: Full access (posture detection, settings, user management)
-   - Clients: Limited access (posture detection only)
+   - Clients: Access to posture detection and personal settings
 
 ### Admin Dashboard
 
+- **Navigation bar** with quick access to:
+  - Dashboard home
+  - Client registration
+  - Settings
+  - Logout
 - View all registered users (email, role, creation date)
 - Create new client accounts
 - Delete user accounts with confirmation
 - Self-deletion detection with automatic logout
-- Access to application settings (admin-only)
+
+### Settings Page
+
+- Accessible to **both admin and client** users
+- Each user manages their own personal settings
+- Dynamic navigation: Home button adapts based on role
+  - Admins: Returns to admin dashboard
+  - Clients: Returns to main app
+- Settings include sensitivity, notifications, thresholds, and break intervals
 
 ### Posture Detection Process
 

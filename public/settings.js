@@ -1,5 +1,29 @@
 // settings.js - Manage application settings with database
 
+// === NEW HELPER FUNCTION ===
+function getActiveUserSession() {
+  try {
+    // Try to get client session first
+    const clientJson = localStorage.getItem("ab_current_client");
+    if (clientJson) {
+      return JSON.parse(clientJson);
+    }
+
+    // If no client, try to get admin session
+    const adminJson = localStorage.getItem("ab_current_user");
+    if (adminJson) {
+      return JSON.parse(adminJson);
+    }
+
+    // No session found
+    return null;
+  } catch (e) {
+    console.error("Error parsing user session", e);
+    return null;
+  }
+}
+// ===========================
+
 // 🎨 Get all input elements
 const sensitivitySlider = document.getElementById("sensitivity");
 const sensitivityValue = document.getElementById("sensitivityValue");
@@ -13,16 +37,28 @@ async function loadSettings() {
   console.log("⚙️ Loading settings from database...");
 
   try {
-    // Get current user from localStorage
-    const userJson = localStorage.getItem("ab_current_user");
-    if (!userJson) {
+    // Get current user from localStorage (admin or client)
+    const user = getActiveUserSession();
+    if (!user) {
       console.error("❌ No user session found");
       alert("Error: No se encontró la sesión del usuario.");
       return;
     }
-
-    const user = JSON.parse(userJson);
     const userId = user.id;
+
+    // === NEW NAVIGATION LOGIC ===
+    const navHomeButton = document.getElementById("nav-home");
+    if (navHomeButton) {
+      if (user.role === "admin") {
+        navHomeButton.href = "admin/admin-welcome.html";
+        navHomeButton.title = "Admin Dashboard";
+      } else {
+        // Client 'Home' is the app itself
+        navHomeButton.href = "index.html";
+        navHomeButton.title = "App Principal";
+      }
+    }
+    // ============================
 
     // Fetch settings from database
     const result = await window.api.getSettings(userId);
@@ -54,15 +90,12 @@ async function saveSettings() {
   console.log("💾 Saving settings to database...");
 
   try {
-    // Get current user from localStorage
-    const userJson = localStorage.getItem("ab_current_user");
-    if (!userJson) {
-      console.error("❌ No user session found");
+    const user = getActiveUserSession();
+    if (!user) {
+      console.error("❌ No user session found for saving");
       alert("Error: No se encontró la sesión del usuario.");
       return;
     }
-
-    const user = JSON.parse(userJson);
     const userId = user.id;
 
     // Prepare settings data
@@ -107,6 +140,7 @@ window.addEventListener("DOMContentLoaded", loadSettings);
 function logout() {
   try {
     localStorage.removeItem("ab_current_user");
+    localStorage.removeItem("ab_current_client");
     // Use replace() to prevent back button issues
     window.location.replace("landing.html");
   } catch (e) {

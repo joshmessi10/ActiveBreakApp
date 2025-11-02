@@ -182,6 +182,8 @@ Renderer Process ←→ contextBridge (preload.js) ←→ Main Process (main.js)
 - Save settings to database via IPC
 - Form validation and user feedback
 - Sensitivity, notifications, alert threshold, break interval configuration
+- **Role-agnostic access**: Both admin and client users can edit their own settings
+- **Dynamic navigation**: Home button adapts based on user role (admin → dashboard, client → main app)
 
 #### 5. **admin-dashboard.js** (Admin Panel - Renderer Process)
 
@@ -201,8 +203,12 @@ Renderer Process ←→ contextBridge (preload.js) ←→ Main Process (main.js)
 
 **Key Responsibilities**:
 
-- Check localStorage for `currentUser` session
+- Check localStorage for `currentUser` session (supports both `ab_current_user` and `ab_current_client`)
 - Redirect to landing page if not authenticated
+- **Three guard functions**:
+  - `checkAdminSession()`: Admin-only pages (admin-welcome.html)
+  - `checkClientSession()`: Client-only pages (index.html)
+  - `checkAnySession()`: Accessible to both roles (settings.html)
 - Used on protected pages (index.html, settings.html, admin-welcome.html)
 
 ---

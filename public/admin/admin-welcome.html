@@ -12,6 +12,8 @@
     </script>
 
     <link rel="stylesheet" href="../style.css" />
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <style>
       body {
         background: #f8fafc;
@@ -150,25 +152,37 @@
     </style>
   </head>
   <body>
+    <header>
+      <h1><i data-feather="shield"></i> Panel de Administración</h1>
+      <nav>
+        <a href="admin-welcome.html" class="active" title="Dashboard">
+          <i data-feather="home"></i>
+        </a>
+        <a href="../client/client-register.html" title="Registrar Cliente">
+          <i data-feather="user-plus"></i>
+        </a>
+        <a href="../settings.html" title="Configuración">
+          <i data-feather="settings"></i>
+        </a>
+        <a
+          href="#"
+          id="nav-logout"
+          title="Volver a Inicio"
+          onclick="logout(); return false;"
+          style="margin-left: auto"
+        >
+          <i data-feather="log-out"></i>
+        </a>
+      </nav>
+    </header>
+
     <main class="dashboard">
       <header class="dashboard__header">
-        <h1 class="dashboard__title">Panel de Administración</h1>
+        <h1 class="dashboard__title">Gestión de Usuarios</h1>
         <p class="dashboard__subtitle">
-          Gestiona los usuarios de tu organización
+          Administra los usuarios de tu organización
         </p>
       </header>
-
-      <div class="dashboard__actions">
-        <a class="btn" href="../client/client-register.html"
-          >➕ Registrar nuevo cliente</a
-        >
-        <a class="btn" href="../settings.html" style="background: #059669">
-          ⚙️ Configuración
-        </a>
-        <a class="btn btn-secondary" href="#" onclick="logout(); return false;"
-          >🏠 Volver al inicio</a
-        >
-      </div>
 
       <div id="message"></div>
 
@@ -191,6 +205,13 @@
       </section>
     </main>
 
+    <footer>
+      <p>© 2025 Active Break</p>
+    </footer>
+
+    <script>
+      feather.replace();
+    </script>
     <script src="./admin-dashboard.js"></script>
   </body>
 </html>
