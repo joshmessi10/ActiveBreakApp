@@ -30,14 +30,14 @@ let poseHoldTime = 0; // Milliseconds
 // --- New Guided Exercise Definitions ---
 const guidedBreakExercises = [
   {
+    name: "Levántate",
+    desc: "Es momento de levantarse!",
+    validationRule: "SQUAT",
+  },
+  {
     name: "Brazos Arriba",
     desc: "Párate derecho y levanta ambos brazos rectos sobre tu cabeza.",
     validationRule: "ARMS_UP",
-  },
-  {
-    name: "Sentadillas",
-    desc: "Baja tu cuerpo doblando las rodillas, mantén la espalda recta y los brazos al frente.",
-    validationRule: "SQUAT",
   },
   {
     name: "Manos en las Rodillas",
