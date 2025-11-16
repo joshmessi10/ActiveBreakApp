@@ -28,26 +28,35 @@ let poseHoldTimer = null; // Will be an interval
 let poseHoldTime = 0; // Milliseconds
 
 // --- New Guided Exercise Definitions ---
+// NOTE: Each exercise has a corresponding video asset mapped by index:
+// Exercise 0 (Levántate) -> stretch_1.mp4
+// Exercise 1 (Brazos Arriba) -> stretch_2.mp4
+// Exercise 2 (Manos en las Rodillas) -> stretch_3.mp4
+// Exercise 3 (Toque de Pies) -> stretch_4.mp4
 const guidedBreakExercises = [
   {
     name: "Levántate",
     desc: "Es momento de levantarse!",
     validationRule: "SQUAT",
+    videoSrc: "assets/stretch_1.mp4", // Strict mapping: Exercise 1
   },
   {
     name: "Brazos Arriba",
     desc: "Párate derecho y levanta ambos brazos rectos sobre tu cabeza.",
     validationRule: "ARMS_UP",
+    videoSrc: "assets/stretch_2.mp4", // Strict mapping: Exercise 2
   },
   {
     name: "Manos en las Rodillas",
     desc: "Inclínate y coloca ambas manos sobre tus rodillas.",
     validationRule: "HANDS_ON_KNEES",
+    videoSrc: "assets/stretch_3.mp4", // Strict mapping: Exercise 3
   },
   {
     name: "Toque de Pies",
     desc: "Inclínate hacia adelante y trata de tocar tus pies o tobillos con las manos.",
     validationRule: "TOUCH_TOES",
+    videoSrc: "assets/stretch_4.mp4", // Strict mapping: Exercise 4
   },
 ];
 
@@ -74,6 +83,10 @@ const breakStatusText = document.getElementById("break-status-text");
 const breakTimerBar = document.getElementById("break-timer-bar");
 const breakSkipBtn = document.getElementById("break-skip-btn");
 const breakCountdown = document.getElementById("break-countdown");
+// Video elements for stretching demonstrations
+const breakVideo = document.getElementById("break-video");
+const breakVideoSource = document.getElementById("break-video-source");
+const breakVideoContainer = document.getElementById("break-video-container");
 
 // Create the timer bar fill element (it's not in HTML)
 const breakTimerFill = document.createElement("div");
@@ -1162,6 +1175,7 @@ function startBreakSequence() {
 
 /**
  * Loads a specific exercise into the UI.
+ * Implements lazy loading of exercise video based on current exercise index.
  */
 function loadExercise(index) {
   if (index >= guidedBreakExercises.length) {
@@ -1175,6 +1189,18 @@ function loadExercise(index) {
   }`;
   breakExerciseName.textContent = exercise.name;
   breakExerciseDesc.textContent = exercise.desc;
+
+  // === LAZY LOAD VIDEO: Only set video source when exercise becomes active ===
+  if (breakVideo && breakVideoSource && exercise.videoSrc) {
+    // Update video source for current exercise
+    breakVideoSource.src = exercise.videoSrc;
+    // Reload video to apply new source
+    breakVideo.load();
+    // Auto-play video when loaded (muted to avoid browser restrictions)
+    breakVideo.play().catch((err) => {
+      console.log("Video autoplay blocked, user must interact:", err);
+    });
+  }
 
   // Reset UI state
   breakCard.classList.remove("pose-detected");
