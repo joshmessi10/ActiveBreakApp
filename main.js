@@ -45,6 +45,14 @@ function getMonthKey(timestampMs) {
   return `${year}-${month}`; // p.ej. 2025-11
 }
 
+function getDefaultPeriodKey(periodType) {
+  const now = Date.now();
+  if (periodType === "weekly") return getWeekKey(now);
+  if (periodType === "monthly") return getMonthKey(now);
+  // fallback: daily
+  return getDayKey(now);
+}
+
 function updateGameScoreAggregates(db, userId, score, endedAt) {
   return new Promise((resolve, reject) => {
     const dayKey = getDayKey(endedAt);
@@ -1283,6 +1291,73 @@ ipcMain.handle("game:breakCompleted", async (event, userId, payload) => {
     };
   }
 });
+
+ipcMain.handle("game:getLeaderboard", async (event, args) => {
+  try {
+    const periodType =
+      (args && args.periodType) && ["daily", "weekly", "monthly"].includes(args.periodType)
+        ? args.periodType
+        : "daily";
+
+    const periodKey =
+      (args && args.periodKey) && typeof args.periodKey === "string"
+        ? args.periodKey
+        : getDefaultPeriodKey(periodType);
+
+    const limit =
+      args && typeof args.limit === "number" && args.limit > 0
+        ? Math.min(args.limit, 50)
+        : 10;
+
+    console.log("🏆 game:getLeaderboard", { periodType, periodKey, limit });
+
+    return new Promise((resolve) => {
+      db.all(
+        `
+        SELECT 
+          u.id as user_id,
+          u.full_name,
+          u.org_name,
+          gs.total_score,
+          gs.breaks_count,
+          gs.last_break_at
+        FROM game_scores gs
+        JOIN users u ON u.id = gs.user_id
+        WHERE gs.period_type = ? AND gs.period_key = ?
+        ORDER BY gs.total_score DESC, gs.last_break_at ASC
+        LIMIT ?
+      `,
+        [periodType, periodKey, limit],
+        (err, rows) => {
+          if (err) {
+            console.error("❌ Error fetching leaderboard:", err);
+            resolve({
+              success: false,
+              message: "Error al obtener leaderboard.",
+              entries: [],
+            });
+            return;
+          }
+
+          resolve({
+            success: true,
+            periodType,
+            periodKey,
+            entries: rows || [],
+          });
+        }
+      );
+    });
+  } catch (e) {
+    console.error("❌ Exception in game:getLeaderboard:", e);
+    return {
+      success: false,
+      message: "Error inesperado al obtener leaderboard.",
+      entries: [],
+    };
+  }
+});
+
 
 
 app.whenReady().then(async () => {

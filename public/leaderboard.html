@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Active Break - Ranking</title>
+
+    <!-- Session Validation - igual que en settings -->
+    <script src="auth-guard.js"></script>
+    <script>
+      checkAnySession();
+    </script>
+
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Estilos específicos del leaderboard -->
+    <style>
+      .leaderboard-page {
+        max-width: 1100px;
+        margin: 2rem auto;
+        padding: 0 1.5rem 2.5rem;
+      }
+
+      .leaderboard-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 1.75rem 2rem;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.07);
+        border: 1px solid #e5e7eb;
+      }
+
+      .leaderboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .leaderboard-title {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .leaderboard-title h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.25rem;
+        margin: 0;
+      }
+
+      .leaderboard-title p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #6b7280;
+      }
+
+      .leaderboard-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .leaderboard-controls select,
+      .leaderboard-controls input {
+        padding: 0.4rem 0.6rem;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        font-size: 0.9rem;
+      }
+
+      .leaderboard-controls input {
+        min-width: 180px;
+      }
+
+      .leaderboard-controls button {
+        padding: 0.45rem 0.9rem;
+        border-radius: 999px;
+        border: none;
+        font-size: 0.9rem;
+        cursor: pointer;
+        background: #4f46e5;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+
+      .leaderboard-controls button:hover {
+        opacity: 0.95;
+      }
+
+      .leaderboard-controls button:active {
+        transform: translateY(1px);
+      }
+
+      .table-wrapper {
+        margin-top: 0.5rem;
+        overflow-x: auto;
+      }
+
+      .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+
+      .leaderboard-table th,
+      .leaderboard-table td {
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .leaderboard-table thead {
+        background: #f9fafb;
+      }
+
+      .leaderboard-table tbody tr:nth-child(odd) {
+        background: #f9fafb;
+      }
+
+      .leaderboard-table tbody tr:first-child td {
+        font-weight: 600;
+      }
+
+      .leaderboard-table td:nth-child(1) {
+        width: 40px;
+        text-align: center;
+      }
+
+      .leaderboard-table td:nth-child(4),
+      .leaderboard-table td:nth-child(5) {
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .error-message {
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        background: #fef2f2;
+        color: #b91c1c;
+        font-size: 0.85rem;
+      }
+
+      @media (max-width: 640px) {
+        .leaderboard-card {
+          padding: 1.25rem 1rem;
+        }
+
+        .leaderboard-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .leaderboard-controls {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1><i data-feather="award"></i> Ranking de Pausas Activas</h1>
+      <nav>
+        <a href="index.html" title="App Principal" id="nav-home">
+          <i data-feather="home"></i>
+        </a>
+        <a
+          href="leaderboard.html"
+          class="active"
+          title="Ranking de pausas activas"
+        >
+          <i data-feather="award"></i>
+        </a>
+        <a href="settings.html" title="Configuración">
+          <i data-feather="settings"></i>
+        </a>
+        <a
+          href="#"
+          id="nav-logout"
+          title="Volver a Inicio"
+          onclick="logout(); return false;"
+          style="margin-left: auto"
+        >
+          <i data-feather="log-out"></i>
+        </a>
+      </nav>
+    </header>
+
+    <main class="leaderboard-page">
+      <section class="leaderboard-card">
+        <div class="leaderboard-header">
+          <div class="leaderboard-title">
+            <h2>
+              <i data-feather="bar-chart-2"></i>
+              Ranking de puntos
+            </h2>
+            <p id="leaderboardSubtitle">
+              Cargando período y posiciones...
+            </p>
+          </div>
+
+          <div class="leaderboard-controls">
+            <select id="periodTypeSelect">
+              <option value="daily">Hoy</option>
+              <option value="weekly">Esta semana</option>
+              <option value="monthly">Este mes</option>
+            </select>
+            <input
+              type="text"
+              id="periodKeyInput"
+              placeholder="Deja vacío para período actual"
+            />
+            <button id="reloadLeaderboardBtn">
+              <span>Actualizar</span>
+              <i data-feather="refresh-ccw"></i>
+            </button>
+          </div>
+        </div>
+
+        <div
+          id="leaderboardError"
+          class="error-message"
+          style="display: none"
+        >
+          Error al cargar el leaderboard.
+        </div>
+
+        <div class="table-wrapper">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Usuario</th>
+                <th>Organización</th>
+                <th>Puntaje</th>
+                <th>Pausas</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+              <tr>
+                <td colspan="5" style="text-align: center">
+                  Cargando...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2025 Active Break</p>
+    </footer>
+
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace();
+    </script>
+    <script src="leaderboard.js"></script>
+  </body>
+</html>

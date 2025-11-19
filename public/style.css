@@ -1270,3 +1270,59 @@ footer p {
   transform: translateY(-1px);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
+
+/* Leaderboard */
+.leaderboard-page {
+  max-width: 900px;
+  margin: 2rem auto;
+}
+
+.leaderboard-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.leaderboard-controls select,
+.leaderboard-controls input {
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+}
+
+.leaderboard-controls button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: #4f46e5;
+  color: #fff;
+}
+
+.table-wrapper {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.leaderboard-table thead {
+  background: #f9fafb;
+}
+
+.leaderboard-table tbody tr:nth-child(odd) {
+  background: #f9fafb;
+}
