@@ -12,6 +12,112 @@ const __dirname = path.dirname(__filename);
 let mainWindow;
 let db;
 
+function getDayKey(timestampMs) {
+  const d = new Date(timestampMs);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`; // p.ej. 2025-11-19
+}
+
+function getWeekKey(timestampMs) {
+  // ISO week YYYY-Www
+  const d = new Date(timestampMs);
+  d.setHours(0, 0, 0, 0);
+
+  // pasar al jueves de la semana actual
+  const day = d.getDay(); // 0 = domingo, 1 = lunes...
+  const diff = (day === 0 ? -6 : 1) - day; // mover a lunes
+  d.setDate(d.getDate() + diff + 3); // jueves
+
+  const weekYear = d.getFullYear();
+  const jan4 = new Date(weekYear, 0, 4);
+  const dayDiff = (d - jan4) / 86400000;
+  const week = 1 + Math.floor(dayDiff / 7);
+
+  return `${weekYear}-W${String(week).padStart(2, "0")}`; // p.ej. 2025-W47
+}
+
+function getMonthKey(timestampMs) {
+  const d = new Date(timestampMs);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`; // p.ej. 2025-11
+}
+
+function updateGameScoreAggregates(db, userId, score, endedAt) {
+  return new Promise((resolve, reject) => {
+    const dayKey = getDayKey(endedAt);
+    const weekKey = getWeekKey(endedAt);
+    const monthKey = getMonthKey(endedAt);
+
+    const updates = [
+      { periodType: "daily", periodKey: dayKey },
+      { periodType: "weekly", periodKey: weekKey },
+      { periodType: "monthly", periodKey: monthKey },
+    ];
+
+    let pending = updates.length;
+    let hadError = false;
+
+    updates.forEach(({ periodType, periodKey }) => {
+      db.run(
+        `
+        INSERT INTO game_scores (user_id, period_type, period_key, total_score, breaks_count, last_break_at)
+        VALUES (?, ?, ?, ?, 1, ?)
+        ON CONFLICT(user_id, period_type, period_key)
+        DO UPDATE SET 
+          total_score = total_score + excluded.total_score,
+          breaks_count = breaks_count + 1,
+          last_break_at = excluded.last_break_at
+      `,
+        [userId, periodType, periodKey, score, endedAt],
+        (err) => {
+          if (err) {
+            console.error("❌ Error updating game_scores:", err);
+            hadError = true;
+          }
+
+          pending -= 1;
+          if (pending === 0) {
+            if (hadError) {
+              reject(new Error("Error updating some game_scores entries"));
+            } else {
+              resolve();
+            }
+          }
+        }
+      );
+    });
+  });
+}
+
+function calculateBreakGameScore(payload) {
+  const { completed, qualityFactor, responseTimeSeconds } = payload;
+
+  if (!completed) {
+    return 0;
+  }
+
+  const basePoints = 50;
+
+  const q = Math.max(0, Math.min(1, typeof qualityFactor === "number" ? qualityFactor : 0));
+  const qualityPoints = Math.round(50 * q);
+
+  let engagementPoints = 0;
+  if (typeof responseTimeSeconds === "number") {
+    if (responseTimeSeconds <= 5) engagementPoints = 20;
+    else if (responseTimeSeconds <= 15) engagementPoints = 10;
+  }
+
+  // De momento dejamos el streak bonus en 0
+  // Luego podemos implementar streak real con game_scores / game_break_sessions
+  const streakBonus = 0;
+
+  return basePoints + qualityPoints + engagementPoints + streakBonus;
+}
+
+
 // Initialize SQLite database
 function initDatabase() {
   return new Promise((resolve, reject) => {
@@ -142,6 +248,78 @@ function initDatabase() {
                           } else {
                             console.log("✅ alert_events table ready");
                             resolve();
+                          }
+                        }
+                      );
+                      // Tabla de sesiones de pausas activas (histórico de "mini-juegos")
+                      db.run(
+                        `
+                        CREATE TABLE IF NOT EXISTS game_break_sessions (
+                          id INTEGER PRIMARY KEY AUTOINCREMENT,
+                          user_id INTEGER NOT NULL,
+                          started_at INTEGER NOT NULL,
+                          ended_at INTEGER NOT NULL,
+                          score INTEGER NOT NULL,
+                          completed_exercises_count INTEGER NOT NULL,
+                          trigger_reason TEXT,
+                          quality_factor REAL,
+                          response_time_s REAL,
+                          created_at INTEGER NOT NULL,
+                          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                        )
+                      `,
+                        (err) => {
+                          if (err) {
+                            console.error("❌ game_break_sessions table creation error:", err);
+                          } else {
+                            console.log("✅ game_break_sessions table ready");
+                          }
+                        }
+                      );
+
+                      // Tabla de agregados de puntaje por periodo (para rankings)
+                      db.run(
+                        `
+                        CREATE TABLE IF NOT EXISTS game_scores (
+                          id INTEGER PRIMARY KEY AUTOINCREMENT,
+                          user_id INTEGER NOT NULL,
+                          period_type TEXT NOT NULL,      -- 'daily' | 'weekly' | 'monthly'
+                          period_key TEXT NOT NULL,       -- '2025-11-19' | '2025-W47' | '2025-11'
+                          total_score INTEGER NOT NULL DEFAULT 0,
+                          breaks_count INTEGER NOT NULL DEFAULT 0,
+                          last_break_at INTEGER,
+                          UNIQUE (user_id, period_type, period_key),
+                          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                        )
+                      `,
+                        (err) => {
+                          if (err) {
+                            console.error("❌ game_scores table creation error:", err);
+                          } else {
+                            console.log("✅ game_scores table ready");
+                          }
+                        }
+                      );
+
+                      // Opcional: tabla de recompensas (para premios)
+                      db.run(
+                        `
+                        CREATE TABLE IF NOT EXISTS game_rewards (
+                          id INTEGER PRIMARY KEY AUTOINCREMENT,
+                          user_id INTEGER NOT NULL,
+                          period_type TEXT NOT NULL,
+                          period_key TEXT NOT NULL,
+                          reward_type TEXT NOT NULL,      -- 'TOP1' | 'TOP3' | 'PARTICIPATION' | ...
+                          metadata TEXT,
+                          created_at INTEGER NOT NULL,
+                          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                        )
+                      `,
+                        (err) => {
+                          if (err) {
+                            console.error("❌ game_rewards table creation error:", err);
+                          } else {
+                            console.log("✅ game_rewards table ready");
                           }
                         }
                       );
@@ -1023,6 +1201,89 @@ ipcMain.on("notify:posture", (event, title, body) => {
     console.log("❌ Notifications not supported on this system");
   }
 });
+
+ipcMain.handle("game:breakCompleted", async (event, userId, payload) => {
+  try {
+    console.log("🎮 game:breakCompleted for user:", userId, payload);
+
+    const now = Date.now();
+    const startedAt = payload.startedAt || now;
+    const endedAt = payload.endedAt || now;
+
+    const cleanPayload = {
+      completed: !!payload.completed,
+      qualityFactor:
+        typeof payload.qualityFactor === "number" ? payload.qualityFactor : 0,
+      responseTimeSeconds:
+        typeof payload.responseTimeSeconds === "number"
+          ? payload.responseTimeSeconds
+          : null,
+      completedExercisesCount:
+        typeof payload.completedExercisesCount === "number"
+          ? payload.completedExercisesCount
+          : 1,
+      triggerReason: payload.triggerReason || null,
+      startedAt,
+      endedAt,
+    };
+
+    const score = calculateBreakGameScore(cleanPayload);
+
+    return new Promise((resolve) => {
+      db.run(
+        `
+        INSERT INTO game_break_sessions 
+          (user_id, started_at, ended_at, score, completed_exercises_count, trigger_reason, quality_factor, response_time_s, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+        [
+          userId,
+          cleanPayload.startedAt,
+          cleanPayload.endedAt,
+          score,
+          cleanPayload.completedExercisesCount,
+          cleanPayload.triggerReason,
+          cleanPayload.qualityFactor,
+          cleanPayload.responseTimeSeconds,
+          now,
+        ],
+        async (err) => {
+          if (err) {
+            console.error("❌ Error inserting game_break_session:", err);
+            resolve({
+              success: false,
+              message: "Error al guardar sesión de juego.",
+            });
+            return;
+          }
+
+          try {
+            await updateGameScoreAggregates(
+              db,
+              userId,
+              score,
+              cleanPayload.endedAt
+            );
+          } catch (aggErr) {
+            console.error("❌ Error updating score aggregates:", aggErr);
+          }
+
+          resolve({
+            success: true,
+            scoreBreak: score,
+          });
+        }
+      );
+    });
+  } catch (e) {
+    console.error("❌ Exception in game:breakCompleted:", e);
+    return {
+      success: false,
+      message: "Error inesperado al guardar puntaje de juego.",
+    };
+  }
+});
+
 
 app.whenReady().then(async () => {
   await initDatabase();

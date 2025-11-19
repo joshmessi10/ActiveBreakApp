@@ -26,6 +26,9 @@ let isInBreakMode = false;
 let currentExerciseIndex = 0;
 let poseHoldTimer = null; // Will be an interval
 let poseHoldTime = 0; // Milliseconds
+// --- Game state for guided breaks ---
+let currentBreakGame = null;
+let lastPoseTimestamp = null;
 
 // --- New Guided Exercise Definitions ---
 // NOTE: Each exercise has a corresponding video asset mapped by index:
@@ -131,6 +134,28 @@ let userSettings = {
   breakInterval: 30,
   characterTheme: "female",
 };
+
+function updateBreakGameMetrics(isPoseCorrect) {
+  if (!currentBreakGame) return;
+  const now = Date.now();
+
+  if (lastPoseTimestamp == null) {
+    lastPoseTimestamp = now;
+    return;
+  }
+
+  const delta = now - lastPoseTimestamp;
+  lastPoseTimestamp = now;
+
+  currentBreakGame.totalMs += delta;
+
+  if (isPoseCorrect) {
+    currentBreakGame.correctMs += delta;
+    if (!currentBreakGame.firstCorrectPoseAt) {
+      currentBreakGame.firstCorrectPoseAt = now;
+    }
+  }
+}
 
 function setPosture(isGood) {
   if (isGood) {
@@ -275,12 +300,24 @@ async function detectPose() {
 
       // --- AI Logic Switch ---
       if (isInBreakMode) {
-        // We are in a break, check exercise pose
-        const rule = guidedBreakExercises[currentExerciseIndex].validationRule;
-        classifyBreakPose(pose, rule);
+        // Estamos en pausa activa (mini-juego)
+        let isCorrectForExercise = false;
+
+        if (currentExerciseIndex < guidedBreakExercises.length) {
+          const rule = guidedBreakExercises[currentExerciseIndex].validationRule;
+          // classifyBreakPose ahora devuelve boolean
+          isCorrectForExercise = !!classifyBreakPose(pose, rule);
+        }
+
+        // Actualizar métricas del juego (tiempo total / tiempo en pose correcta)
+        if (currentBreakGame) {
+          updateBreakGameMetrics(isCorrectForExercise);
+        }
       } else {
-        // Not in a break, check sitting posture
+        // No estamos en pausa, lógica normal de postura sentada
         classifyPose(pose);
+        // fuera de break no acumulamos métricas de juego
+        lastPoseTimestamp = null;
       }
       // --- End of Logic Switch ---
     }
@@ -291,6 +328,7 @@ async function detectPose() {
   // Continue loop
   requestAnimationFrame(detectPose);
 }
+
 
 // 🎨 Visual Posture Correction Guides
 function showVisualGuide(errorType) {
@@ -1164,6 +1202,18 @@ function startBreakSequence() {
   resetPoseHoldTimer();
   loadExercise(currentExerciseIndex);
 
+  // Inicializar estado del mini-juego
+  const now = Date.now();
+  currentBreakGame = {
+    startedAt: now,
+    totalMs: 0,
+    correctMs: 0,
+    firstCorrectPoseAt: null,
+    completedExercisesCount: 0,
+    triggerReason: "TIMER", // de momento solo gatillado por intervalo
+  };
+  lastPoseTimestamp = null;
+
   // Move camera elements to break overlay
   const breakCameraContainer = document.getElementById(
     "break-camera-container"
@@ -1181,6 +1231,7 @@ function startBreakSequence() {
 
   breakOverlay.style.display = "flex";
 }
+
 
 /**
  * Loads a specific exercise into the UI.
@@ -1227,9 +1278,15 @@ function loadExercise(index) {
 /**
  * Ends the guided break sequence and resumes the app.
  */
-function endBreakSequence() {
+/**
+ * Ends the guided break sequence and resumes the app.
+ */
+function endBreakSequence(completed = true) {
   isInBreakMode = false;
   resetPoseHoldTimer();
+
+  // Finalizar sesión de juego
+  finalizeGuidedBreakGameSession(completed);
 
   // Restore camera elements to original position
   if (window.originalCameraParent) {
@@ -1261,23 +1318,85 @@ function resetPoseHoldTimer() {
  * Called when a pose is successfully held for 10 seconds.
  */
 function completeExercise() {
+  if (currentBreakGame) {
+    currentBreakGame.completedExercisesCount += 1;
+  }
+
   resetPoseHoldTimer();
   currentExerciseIndex++;
   loadExercise(currentExerciseIndex);
 }
 
+function finalizeGuidedBreakGameSession(completed) {
+  if (!currentBreakGame) return;
+
+  const endedAt = Date.now();
+  const totalMs =
+    currentBreakGame.totalMs ||
+    Math.max(1, endedAt - currentBreakGame.startedAt);
+  const qualityFactor =
+    totalMs > 0 ? currentBreakGame.correctMs / totalMs : 0;
+
+  let responseTimeSeconds = null;
+  if (currentBreakGame.firstCorrectPoseAt) {
+    responseTimeSeconds =
+      (currentBreakGame.firstCorrectPoseAt - currentBreakGame.startedAt) /
+      1000;
+  }
+
+  const payload = {
+    completed: !!completed,
+    qualityFactor,
+    responseTimeSeconds,
+    startedAt: currentBreakGame.startedAt,
+    endedAt,
+    completedExercisesCount:
+      currentBreakGame.completedExercisesCount || (completed ? 1 : 0),
+    triggerReason: currentBreakGame.triggerReason || null,
+  };
+
+  // Limpiar estado local del juego
+  currentBreakGame = null;
+  lastPoseTimestamp = null;
+
+  if (!window.api || !window.api.registerGameBreakResult || !userId) {
+    console.warn(
+      "Game result not sent (missing api.registerGameBreakResult or userId)"
+    );
+    return;
+  }
+
+  window.api
+    .registerGameBreakResult(userId, payload)
+    .then((result) => {
+      if (result && result.success) {
+        console.log("🎮 Puntaje de pausa:", result.scoreBreak);
+        // Aquí podrías disparar un toast/modal tipo:
+        // showToast(`Ganaste ${result.scoreBreak} puntos en esta pausa 🎉`);
+      } else {
+        console.warn("Falló registro de puntaje de juego:", result);
+      }
+    })
+    .catch((err) => {
+      console.error("Error enviando resultado de juego:", err);
+    });
+}
+
+
 /**
  * Handles clicks on the 'Skip' button.
  */
 breakSkipBtn.addEventListener("click", () => {
-  // If on last exercise, button text is "Terminar!"
+  // Si estamos en el último ejercicio, el botón dice "¡Terminar!"
   if (currentExerciseIndex >= guidedBreakExercises.length - 1) {
-    endBreakSequence();
+    // Consideramos que NO completó todos los holds al 100%
+    endBreakSequence(false);
   } else {
-    // Skip to next
+    // Saltar al siguiente ejercicio, pero cuenta como ejercicio "pasado" en el juego
     completeExercise();
   }
 });
+
 
 /**
  * NEW CLASSIFIER: Checks for guided break poses.
@@ -1439,6 +1558,7 @@ function classifyBreakPose(pose, rule) {
     // Pose is incorrect, reset everything
     resetPoseHoldTimer();
   }
+  return isPoseCorrect;
 }
 
 // Logout function for user dashboard

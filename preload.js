@@ -30,4 +30,7 @@ contextBridge.exposeInMainWorld("api", {
   // Modal data API
   getModalData: (userId, startDate, endDate) =>
     ipcRenderer.invoke("stats:get-modal-data", userId, startDate, endDate),
+
+  registerGameBreakResult: (userId, payload) =>
+    ipcRenderer.invoke("game:breakCompleted", userId, payload),
 });
