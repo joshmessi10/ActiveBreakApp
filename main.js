@@ -61,6 +61,7 @@ function initDatabase() {
               notificationsEnabled INTEGER DEFAULT 1,
               alertThreshold INTEGER DEFAULT 3,
               breakInterval INTEGER DEFAULT 30,
+              characterTheme TEXT DEFAULT 'female',
               FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
           `,
@@ -71,6 +72,14 @@ function initDatabase() {
                 return;
               }
               console.log("✅ user_settings table ready");
+              db.run(
+                `ALTER TABLE user_settings ADD COLUMN characterTheme TEXT DEFAULT 'female'`,
+                (alterErr) => {
+                  if (alterErr && !String(alterErr).includes("duplicate column")) {
+                    console.error("⚠️ Error adding characterTheme column:", alterErr);
+                  }
+                }
+              );
 
               // Create user_stats table
               db.run(
@@ -200,7 +209,7 @@ ipcMain.handle(
               // Create default settings for new user
               db.run(
                 `INSERT INTO user_settings (user_id, sensitivity, notificationsEnabled, alertThreshold, breakInterval)
-                 VALUES (?, 5, 1, 3, 30)`,
+                 VALUES (?, 5, 1, 3, 30, 'female')`,
                 [newUserId],
                 (err) => {
                   if (err) {
@@ -366,41 +375,97 @@ ipcMain.handle("admin:delete-user", async (event, userId) => {
 // IPC Handler: Get user settings
 ipcMain.handle("settings:get", async (event, userId) => {
   try {
-    console.log("⚙️ Fetching settings for user:", userId);
-
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       db.get(
-        "SELECT * FROM user_settings WHERE user_id = ?",
+        `SELECT * FROM user_settings WHERE user_id = ?`,
         [userId],
-        (err, settings) => {
+        (err, row) => {
           if (err) {
             console.error("❌ Error fetching settings:", err);
             resolve({
               success: false,
               message: "Error al obtener configuración.",
+              settings: null,
             });
             return;
           }
 
-          if (!settings) {
-            console.log("⚠️ No settings found for user:", userId);
-            resolve({
-              success: false,
-              message: "Configuración no encontrada.",
-            });
+          // Si no existe configuración para este usuario, la creamos con valores por defecto
+          if (!row) {
+            console.log(
+              "ℹ️ No settings found for user, creating defaults for user_id:",
+              userId
+            );
+
+            db.run(
+              `INSERT INTO user_settings 
+                 (user_id, sensitivity, notificationsEnabled, alertThreshold, breakInterval, characterTheme)
+               VALUES (?, 5, 1, 3, 30, 'female')`,
+              [userId],
+              (insertErr) => {
+                if (insertErr) {
+                  console.error(
+                    "❌ Error creating default settings for user:",
+                    insertErr
+                  );
+                  resolve({
+                    success: false,
+                    message:
+                      "Error al crear configuración por defecto para el usuario.",
+                    settings: null,
+                  });
+                  return;
+                }
+
+                // Volvemos a leer para devolverle al frontend la fila recién creada
+                db.get(
+                  `SELECT * FROM user_settings WHERE user_id = ?`,
+                  [userId],
+                  (err2, newRow) => {
+                    if (err2 || !newRow) {
+                      console.error(
+                        "❌ Error fetching newly created settings:",
+                        err2
+                      );
+                      resolve({
+                        success: false,
+                        message:
+                          "Error al obtener configuración recién creada.",
+                        settings: null,
+                      });
+                      return;
+                    }
+
+                    resolve({
+                      success: true,
+                      settings: newRow,
+                    });
+                  }
+                );
+              }
+            );
+
             return;
           }
 
-          console.log("✅ Settings retrieved for user:", userId);
-          resolve({ success: true, settings });
+          // Caso normal: configuración encontrada
+          resolve({
+            success: true,
+            settings: row,
+          });
         }
       );
     });
-  } catch (error) {
-    console.error("❌ Exception fetching settings:", error);
-    return { success: false, message: "Error al obtener configuración." };
+  } catch (e) {
+    console.error("❌ Exception in settings:get:", e);
+    return {
+      success: false,
+      message: "Error inesperado al obtener configuración.",
+      settings: null,
+    };
   }
 });
+
 
 // IPC Handler: Save user settings
 ipcMain.handle("settings:save", async (event, userId, settingsData) => {
@@ -410,13 +475,14 @@ ipcMain.handle("settings:save", async (event, userId, settingsData) => {
     return new Promise((resolve, reject) => {
       db.run(
         `UPDATE user_settings 
-         SET sensitivity = ?, notificationsEnabled = ?, alertThreshold = ?, breakInterval = ?
+         SET sensitivity = ?, notificationsEnabled = ?, alertThreshold = ?, breakInterval = ?, characterTheme = ?
          WHERE user_id = ?`,
         [
           settingsData.sensitivity,
           settingsData.notificationsEnabled,
           settingsData.alertThreshold,
           settingsData.breakInterval,
+          settingsData.characterTheme,
           userId,
         ],
         function (err) {

@@ -67,6 +67,42 @@
         <input type="number" id="breakInterval" min="5" max="120" value="30" />
       </div>
 
+      <div class="settings-option">
+        <label>Personaje para las pausas activas:</label>
+        <div class="character-selector">
+          <label class="character-card">
+            <input
+              type="radio"
+              name="characterTheme"
+              value="female"
+              checked
+            />
+            <div class="character-card-body">
+              <div class="character-avatar">♀</div>
+              <div>
+                <div class="character-title">Personaje femenino</div>
+                <div class="character-subtitle">
+                  Estiramientos guiados con avatar femenino.
+                </div>
+              </div>
+            </div>
+          </label>
+
+          <label class="character-card">
+            <input type="radio" name="characterTheme" value="male" />
+            <div class="character-card-body">
+              <div class="character-avatar">♂</div>
+              <div>
+                <div class="character-title">Personaje masculino</div>
+                <div class="character-subtitle">
+                  Estiramientos guiados con avatar masculino.
+                </div>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
       <button id="saveSettings">Guardar Cambios</button>
     </main>
 

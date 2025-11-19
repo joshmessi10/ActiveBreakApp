@@ -33,32 +33,38 @@ let poseHoldTime = 0; // Milliseconds
 // Exercise 1 (Brazos Arriba) -> stretch_2.mp4
 // Exercise 2 (Manos en las Rodillas) -> stretch_3.mp4
 // Exercise 3 (Toque de Pies) -> stretch_4.mp4
+
+const USE_FEMALE_CHARACTER = true;
+
 const guidedBreakExercises = [
   {
     name: "Levántate",
     desc: "Es momento de levantarse!",
     validationRule: "SQUAT",
-    videoSrc: "assets/stretch_1.mp4", // Strict mapping: Exercise 1
   },
   {
     name: "Brazos Arriba",
     desc: "Párate derecho y levanta ambos brazos rectos sobre tu cabeza.",
     validationRule: "ARMS_UP",
-    videoSrc: "assets/stretch_2.mp4", // Strict mapping: Exercise 2
   },
   {
     name: "Manos en las Rodillas",
     desc: "Inclínate y coloca ambas manos sobre tus rodillas.",
     validationRule: "HANDS_ON_KNEES",
-    videoSrc: "assets/stretch_3.mp4", // Strict mapping: Exercise 3
   },
   {
     name: "Toque de Pies",
     desc: "Inclínate hacia adelante y trata de tocar tus pies o tobillos con las manos.",
     validationRule: "TOUCH_TOES",
-    videoSrc: "assets/stretch_4.mp4", // Strict mapping: Exercise 4
   },
 ];
+
+function getStretchVideoPath(exerciseIndex) {
+  // exerciseIndex: 0..3  => N = index + 1
+  const N = exerciseIndex + 1;
+  const suffix = userSettings.characterTheme === "female" ? "-g" : "";
+  return `assets/stretch_${N}${suffix}.mp4`;
+}
 
 // 🎨 DOM Elements
 const video = document.getElementById("video");
@@ -123,6 +129,7 @@ let userSettings = {
   notificationsEnabled: true,
   alertThreshold: 3,
   breakInterval: 30,
+  characterTheme: "female",
 };
 
 function setPosture(isGood) {
@@ -717,6 +724,8 @@ async function loadUserSettings() {
         notificationsEnabled: result.settings.notificationsEnabled === 1,
         alertThreshold: result.settings.alertThreshold,
         breakInterval: result.settings.breakInterval,
+        characterTheme:
+          result.settings.characterTheme === "male" ? "male" : "female",
       };
       console.log("✅ User settings loaded from database:", userSettings);
     } else {
@@ -1191,9 +1200,9 @@ function loadExercise(index) {
   breakExerciseDesc.textContent = exercise.desc;
 
   // === LAZY LOAD VIDEO: Only set video source when exercise becomes active ===
-  if (breakVideo && breakVideoSource && exercise.videoSrc) {
-    // Update video source for current exercise
-    breakVideoSource.src = exercise.videoSrc;
+  if (breakVideo && breakVideoSource) {
+    const src = getStretchVideoPath(index);
+    breakVideoSource.src = src;
     // Reload video to apply new source
     breakVideo.load();
     // Auto-play video when loaded (muted to avoid browser restrictions)

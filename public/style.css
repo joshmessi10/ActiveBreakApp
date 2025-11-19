@@ -1206,3 +1206,67 @@ footer p {
     order: 1;
   }
 }
+
+
+/* Character selector */
+.character-selector {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.character-card {
+  flex: 1 1 200px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease,
+    transform 0.1s ease;
+  background: #fff;
+  display: block;
+}
+
+.character-card input[type="radio"] {
+  display: none;
+}
+
+.character-card-body {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.character-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  background: #f3f4f6;
+}
+
+.character-title {
+  font-weight: 600;
+}
+
+.character-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* efecto visual cuando está seleccionado */
+.character-card input[type="radio"]:checked + .character-card-body {
+  border-radius: 10px;
+  box-shadow: 0 0 0 2px #4f46e5;
+  background: #eef2ff;
+}
+
+.character-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}

@@ -31,6 +31,9 @@ const notificationsCheckbox = document.getElementById("notifications");
 const alertThresholdInput = document.getElementById("alertThreshold");
 const breakIntervalInput = document.getElementById("breakInterval");
 const saveSettingsButton = document.getElementById("saveSettings");
+const characterThemeRadios = document.querySelectorAll(
+  'input[name="characterTheme"]'
+);
 
 // 📥 Load settings from database
 async function loadSettings() {
@@ -77,6 +80,12 @@ async function loadSettings() {
     notificationsCheckbox.checked = settings.notificationsEnabled === 1;
     alertThresholdInput.value = settings.alertThreshold;
     breakIntervalInput.value = settings.breakInterval;
+    const theme = settings.characterTheme || "female";
+    if (characterThemeRadios && characterThemeRadios.length) {
+      characterThemeRadios.forEach((radio) => {
+        radio.checked = radio.value === theme;
+      });
+    }
 
     console.log("✅ Settings loaded:", settings);
   } catch (error) {
@@ -99,13 +108,24 @@ async function saveSettings() {
     const userId = user.id;
 
     // Prepare settings data
+    let selectedTheme = "female";
+    if (characterThemeRadios && characterThemeRadios.length) {
+      const checked = Array.from(characterThemeRadios).find(
+        (r) => r.checked
+      );
+      if (checked) {
+        selectedTheme = checked.value;
+      }
+    }
+
     const settingsData = {
       sensitivity: parseInt(sensitivitySlider.value, 10),
       notificationsEnabled: notificationsCheckbox.checked ? 1 : 0,
       alertThreshold: parseInt(alertThresholdInput.value, 10),
       breakInterval: parseInt(breakIntervalInput.value, 10),
+      characterTheme: selectedTheme,
     };
-
+    
     console.log("💾 Saving settings:", settingsData);
 
     // Save settings to database
