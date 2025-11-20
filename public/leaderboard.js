@@ -84,12 +84,16 @@ document.addEventListener("DOMContentLoaded", () => {
             ? entry.full_name
             : `Usuario #${entry.user_id}`;
 
+        const level = entry.level || 1;
+        const periodXp = entry.total_score || 0;
+
         tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${userName}</td>
-          <td>${orgName}</td>
-          <td>${entry.total_score}</td>
-          <td>${entry.breaks_count}</td>
+        <td>${index + 1}</td>
+        <td>${userName}</td>
+        <td>${orgName}</td>
+        <td>${level}</td>
+        <td>${periodXp}</td>
+        <td>${entry.breaks_count}</td>
         `;
 
         tbody.appendChild(tr);
@@ -100,9 +104,9 @@ document.addEventListener("DOMContentLoaded", () => {
       subtitle.textContent = "Error inesperado al cargar el leaderboard.";
       tbody.innerHTML = `
         <tr>
-          <td colspan="5" style="text-align:center;">Error al cargar datos.</td>
+            <td colspan="6" style="text-align:center;">Todavía no hay XP registrada en este período.</td>
         </tr>
-      `;
+        `;
     }
   }
 

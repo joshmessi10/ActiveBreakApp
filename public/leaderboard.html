@@ -153,6 +153,67 @@
         font-size: 0.85rem;
       }
 
+      .xp-level-legend {
+        margin-top: 1.5rem;
+        font-size: 0.85rem;
+        }
+
+        .xp-level-legend h3 {
+        margin: 0 0 0.5rem;
+        font-size: 0.9rem;
+        color: #111827;
+        }
+
+        .xp-level-table {
+        border-collapse: collapse;
+        }
+
+        .xp-level-table td {
+        padding: 0.2rem 0.5rem 0.2rem 0;
+        vertical-align: middle;
+        }
+
+        .xp-level-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        }
+
+        .xp-level-badge.level-1 {
+        background: #e0f2fe;
+        color: #0369a1;
+        }
+
+        .xp-level-badge.level-2 {
+        background: #dcfce7;
+        color: #15803d;
+        }
+
+        .xp-level-badge.level-3 {
+        background: #fef3c7;
+        color: #b45309;
+        }
+
+        .xp-level-badge.level-4 {
+        background: #fee2e2;
+        color: #b91c1c;
+        }
+
+        .xp-level-badge.level-5 {
+        background: #ede9fe;
+        color: #5b21b6;
+        }
+
+        .xp-level-badge.level-6 {
+        background: #f9fafb;
+        color: #111827;
+        }
+
+
       @media (max-width: 640px) {
         .leaderboard-card {
           padding: 1.25rem 1rem;
@@ -204,7 +265,7 @@
           <div class="leaderboard-title">
             <h2>
               <i data-feather="bar-chart-2"></i>
-              Ranking de puntos
+              Ranking de XP
             </h2>
             <p id="leaderboardSubtitle">
               Cargando período y posiciones...
@@ -240,13 +301,14 @@
         <div class="table-wrapper">
           <table class="leaderboard-table">
             <thead>
-              <tr>
+                <tr>
                 <th>#</th>
                 <th>Usuario</th>
                 <th>Organización</th>
-                <th>Puntaje</th>
+                <th>Nivel</th>
+                <th>XP (período)</th>
                 <th>Pausas</th>
-              </tr>
+                </tr>
             </thead>
             <tbody id="leaderboardBody">
               <tr>
@@ -257,6 +319,49 @@
             </tbody>
           </table>
         </div>
+        <div class="xp-level-legend">
+            <h3>Rangos de niveles</h3>
+            <table class="xp-level-table">
+                <tbody>
+                <tr>
+                    <td>
+                    <span class="xp-level-badge level-1">Nivel 1</span>
+                    </td>
+                    <td>0 – 99 XP</td>
+                </tr>
+                <tr>
+                    <td>
+                    <span class="xp-level-badge level-2">Nivel 2</span>
+                    </td>
+                    <td>100 – 399 XP</td>
+                </tr>
+                <tr>
+                    <td>
+                    <span class="xp-level-badge level-3">Nivel 3</span>
+                    </td>
+                    <td>400 – 899 XP</td>
+                </tr>
+                <tr>
+                    <td>
+                    <span class="xp-level-badge level-4">Nivel 4</span>
+                    </td>
+                    <td>900 – 1 599 XP</td>
+                </tr>
+                <tr>
+                    <td>
+                    <span class="xp-level-badge level-5">Nivel 5</span>
+                    </td>
+                    <td>1 600 – 2 499 XP</td>
+                </tr>
+                <tr>
+                    <td>
+                    <span class="xp-level-badge level-6">Nivel 6+</span>
+                    </td>
+                    <td>2 500+ XP</td>
+                </tr>
+                </tbody>
+            </table>
+</div>
       </section>
     </main>
 

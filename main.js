@@ -53,6 +53,81 @@ function getDefaultPeriodKey(periodType) {
   return getDayKey(now);
 }
 
+function calculateLevelFromXp(totalXp) {
+  const xp = Math.max(0, totalXp || 0);
+  const base = 100; // XP base por "salto" de nivel
+
+  // Curva suave: el coste por nivel crece (no lineal)
+  // Ejemplos aprox:
+  // 0 XP   -> lvl 1
+  // 100 XP -> lvl 2
+  // 400 XP -> lvl 3
+  // 900 XP -> lvl 4, etc.
+  const level = Math.floor(Math.sqrt(xp / base)) + 1;
+
+  return Math.max(1, level);
+}
+
+// 🧮 Actualizar XP total y nivel de un usuario
+function updateUserProgressXp(db, userId, xpGain) {
+  return new Promise((resolve, reject) => {
+    const gain = Math.max(0, xpGain || 0);
+    const now = Date.now();
+
+    db.get(
+      `SELECT total_xp, level FROM user_progress WHERE user_id = ?`,
+      [userId],
+      (err, row) => {
+        if (err) {
+          console.error("❌ Error fetching user_progress:", err);
+          return reject(err);
+        }
+
+        const currentXp = row ? row.total_xp || 0 : 0;
+        const newTotalXp = currentXp + gain;
+        const newLevel = calculateLevelFromXp(newTotalXp);
+
+        if (!row) {
+          // Crear fila si no existía (usuarios antiguos)
+          db.run(
+            `INSERT INTO user_progress (user_id, total_xp, level, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?)`,
+            [userId, newTotalXp, newLevel, now, now],
+            (insertErr) => {
+              if (insertErr) {
+                console.error(
+                  "❌ Error inserting user_progress:",
+                  insertErr
+                );
+                return reject(insertErr);
+              }
+              resolve({ totalXp: newTotalXp, level: newLevel });
+            }
+          );
+        } else {
+          // Actualizar fila existente
+          db.run(
+            `UPDATE user_progress
+             SET total_xp = ?, level = ?, updated_at = ?
+             WHERE user_id = ?`,
+            [newTotalXp, newLevel, now, userId],
+            (updateErr) => {
+              if (updateErr) {
+                console.error(
+                  "❌ Error updating user_progress:",
+                  updateErr
+                );
+                return reject(updateErr);
+              }
+              resolve({ totalXp: newTotalXp, level: newLevel });
+            }
+          );
+        }
+      }
+    );
+  });
+}
+
 function updateGameScoreAggregates(db, userId, score, endedAt) {
   return new Promise((resolve, reject) => {
     const dayKey = getDayKey(endedAt);
@@ -331,6 +406,25 @@ function initDatabase() {
                           }
                         }
                       );
+                      db.run(
+                        `
+                        CREATE TABLE IF NOT EXISTS user_progress (
+                          user_id INTEGER PRIMARY KEY,
+                          total_xp INTEGER NOT NULL DEFAULT 0,
+                          level INTEGER NOT NULL DEFAULT 1,
+                          created_at INTEGER NOT NULL,
+                          updated_at INTEGER NOT NULL,
+                          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                        )
+                      `,
+                        (err) => {
+                          if (err) {
+                            console.error("❌ user_progress table creation error:", err);
+                          } else {
+                            console.log("✅ user_progress table ready");
+                          }
+                        }
+                      );
                     }
                   );
                 }
@@ -405,6 +499,20 @@ ipcMain.handle(
                       "✅ Default settings created for user:",
                       newUserId
                     );
+                  }
+                }
+              );
+
+              const nowTs = Date.now();
+              db.run(
+                `INSERT INTO user_progress (user_id, total_xp, level, created_at, updated_at)
+                VALUES (?, 0, 1, ?, ?)`,
+                [newUserId, nowTs, nowTs],
+                (err) => {
+                  if (err) {
+                    console.error("❌ Error creating user_progress row:", err);
+                  } else {
+                    console.log("✅ user_progress initialized for user:", newUserId);
                   }
                 }
               );
@@ -1235,7 +1343,8 @@ ipcMain.handle("game:breakCompleted", async (event, userId, payload) => {
       endedAt,
     };
 
-    const score = calculateBreakGameScore(cleanPayload);
+    // 🧮 XP ganado en esta pausa (antes lo llamábamos "score")
+    const xpGain = calculateBreakGameScore(cleanPayload);
 
     return new Promise((resolve) => {
       db.run(
@@ -1248,7 +1357,7 @@ ipcMain.handle("game:breakCompleted", async (event, userId, payload) => {
           userId,
           cleanPayload.startedAt,
           cleanPayload.endedAt,
-          score,
+          xpGain, // 👈 almacenamos XP de esta pausa
           cleanPayload.completedExercisesCount,
           cleanPayload.triggerReason,
           cleanPayload.qualityFactor,
@@ -1266,19 +1375,37 @@ ipcMain.handle("game:breakCompleted", async (event, userId, payload) => {
           }
 
           try {
+            // XP del período (día/semana/mes) – sigue usando game_scores.total_score
             await updateGameScoreAggregates(
               db,
               userId,
-              score,
+              xpGain,
               cleanPayload.endedAt
             );
           } catch (aggErr) {
             console.error("❌ Error updating score aggregates:", aggErr);
           }
 
+          let progress = null;
+          try {
+            // 🎯 Actualizar XP total y nivel global del usuario
+            progress = await updateUserProgressXp(db, userId, xpGain);
+          } catch (progressErr) {
+            console.error(
+              "❌ Error updating user progress XP:",
+              progressErr
+            );
+          }
+
           resolve({
             success: true,
-            scoreBreak: score,
+            // XP ganada en esta pausa
+            xpGain,
+            // mantenemos scoreBreak por compatibilidad, pero es XP
+            scoreBreak: xpGain,
+            // progreso global (puede ser null si hubo error)
+            totalXp: progress ? progress.totalXp : null,
+            level: progress ? progress.level : null,
           });
         }
       );
@@ -1287,10 +1414,11 @@ ipcMain.handle("game:breakCompleted", async (event, userId, payload) => {
     console.error("❌ Exception in game:breakCompleted:", e);
     return {
       success: false,
-      message: "Error inesperado al guardar puntaje de juego.",
+      message: "Error inesperado al guardar XP de juego.",
     };
   }
 });
+
 
 ipcMain.handle("game:getLeaderboard", async (event, args) => {
   try {
@@ -1318,11 +1446,14 @@ ipcMain.handle("game:getLeaderboard", async (event, args) => {
           u.id as user_id,
           u.full_name,
           u.org_name,
-          gs.total_score,
+          gs.total_score,        -- XP del período
           gs.breaks_count,
-          gs.last_break_at
+          gs.last_break_at,
+          p.total_xp,            -- XP total global
+          p.level                -- nivel global
         FROM game_scores gs
         JOIN users u ON u.id = gs.user_id
+        LEFT JOIN user_progress p ON p.user_id = u.id
         WHERE gs.period_type = ? AND gs.period_key = ?
         ORDER BY gs.total_score DESC, gs.last_break_at ASC
         LIMIT ?
@@ -1358,6 +1489,61 @@ ipcMain.handle("game:getLeaderboard", async (event, args) => {
   }
 });
 
+ipcMain.handle("user:getProgress", async (event, userId) => {
+  try {
+    return new Promise((resolve) => {
+      db.get(
+        `SELECT total_xp, level FROM user_progress WHERE user_id = ?`,
+        [userId],
+        async (err, row) => {
+          if (err) {
+            console.error("❌ Error fetching user_progress:", err);
+            resolve({
+              success: false,
+              message: "Error al obtener progreso.",
+            });
+            return;
+          }
+
+          if (!row) {
+            // Crear registro por defecto si no existe
+            try {
+              const progress = await updateUserProgressXp(db, userId, 0);
+              resolve({
+                success: true,
+                totalXp: progress.totalXp,
+                level: progress.level,
+              });
+            } catch (createErr) {
+              console.error(
+                "❌ Error creating default user_progress:",
+                createErr
+              );
+              resolve({
+                success: false,
+                message:
+                  "Error al inicializar progreso de usuario.",
+              });
+            }
+            return;
+          }
+
+          resolve({
+            success: true,
+            totalXp: row.total_xp,
+            level: row.level,
+          });
+        }
+      );
+    });
+  } catch (e) {
+    console.error("❌ Exception in user:getProgress:", e);
+    return {
+      success: false,
+      message: "Error inesperado al obtener progreso.",
+    };
+  }
+});
 
 
 app.whenReady().then(async () => {

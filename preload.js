@@ -34,4 +34,5 @@ contextBridge.exposeInMainWorld("api", {
   registerGameBreakResult: (userId, payload) =>
     ipcRenderer.invoke("game:breakCompleted", userId, payload),
   getLeaderboard: (args) => ipcRenderer.invoke("game:getLeaderboard", args),
+  getUserProgress: (userId) => ipcRenderer.invoke("user:getProgress", userId),
 });

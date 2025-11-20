@@ -1367,19 +1367,64 @@ function finalizeGuidedBreakGameSession(completed) {
   }
 
   window.api
-    .registerGameBreakResult(userId, payload)
-    .then((result) => {
-      if (result && result.success) {
-        console.log("🎮 Puntaje de pausa:", result.scoreBreak);
-        // Aquí podrías disparar un toast/modal tipo:
-        // showToast(`Ganaste ${result.scoreBreak} puntos en esta pausa 🎉`);
-      } else {
-        console.warn("Falló registro de puntaje de juego:", result);
-      }
-    })
-    .catch((err) => {
-      console.error("Error enviando resultado de juego:", err);
-    });
+  .registerGameBreakResult(userId, payload)
+  .then((result) => {
+    if (result && result.success) {
+      const xpGain =
+        typeof result.xpGain === "number"
+          ? result.xpGain
+          : typeof result.scoreBreak === "number"
+          ? result.scoreBreak
+          : 0;
+
+      showXpPopup(xpGain, result.level, result.totalXp);
+    } else {
+      console.warn("Falló registro de puntaje de juego:", result);
+    }
+  })
+  .catch((err) => {
+    console.error("Error enviando resultado de juego:", err);
+  });
+}
+
+function showXpPopup(xpGain, level, totalXp) {
+  const popup = document.getElementById("xp-popup");
+  const main = document.getElementById("xp-popup-message-main");
+  const sub = document.getElementById("xp-popup-message-sub");
+  const closeBtn = document.getElementById("xp-popup-close-btn");
+
+  if (!popup || !main || !sub || !closeBtn) {
+    console.warn("XP popup elements not found in DOM");
+    return;
+  }
+
+  const safeXp = typeof xpGain === "number" ? xpGain : 0;
+  main.textContent = `Ganaste ${safeXp} XP en esta pausa.`;
+
+  if (typeof level === "number" && typeof totalXp === "number") {
+    sub.textContent = `Nivel actual: ${level} · ${totalXp} XP total`;
+  } else {
+    sub.textContent = "";
+  }
+
+  popup.classList.add("visible");
+  popup.setAttribute("aria-hidden", "false");
+
+  const closeHandler = () => {
+    popup.classList.remove("visible");
+    popup.setAttribute("aria-hidden", "true");
+    closeBtn.removeEventListener("click", closeHandler);
+    popup.removeEventListener("click", backdropHandler);
+  };
+
+  const backdropHandler = (e) => {
+    if (e.target === popup) {
+      closeHandler();
+    }
+  };
+
+  closeBtn.addEventListener("click", closeHandler);
+  popup.addEventListener("click", backdropHandler);
 }
 
 
