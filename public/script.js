@@ -1285,10 +1285,9 @@ function endBreakSequence(completed = true) {
   isInBreakMode = false;
   resetPoseHoldTimer();
 
-  // Finalizar sesión de juego
+  // 👇 importante: pasamos el booleano
   finalizeGuidedBreakGameSession(completed);
 
-  // Restore camera elements to original position
   if (window.originalCameraParent) {
     window.originalCameraParent.appendChild(video);
     window.originalCameraParent.appendChild(canvas);
@@ -1296,6 +1295,7 @@ function endBreakSequence(completed = true) {
 
   breakOverlay.style.display = "none";
 }
+
 
 /**
  * Resets the 10-second pose hold timer.
@@ -1377,7 +1377,19 @@ function finalizeGuidedBreakGameSession(completed) {
           ? result.scoreBreak
           : 0;
 
-      showXpPopup(xpGain, result.level, result.totalXp);
+      const challenges =
+        (result.completedChallenges &&
+          Array.isArray(result.completedChallenges) &&
+          result.completedChallenges) ||
+        [];
+      const firstChallenge = challenges[0] || null;
+
+      let extraText = null;
+      if (firstChallenge) {
+        extraText = `Reto completado: ${firstChallenge.name}`;
+      }
+
+      showXpPopup(xpGain, result.level, result.totalXp, extraText);
     } else {
       console.warn("Falló registro de puntaje de juego:", result);
     }
@@ -1385,9 +1397,10 @@ function finalizeGuidedBreakGameSession(completed) {
   .catch((err) => {
     console.error("Error enviando resultado de juego:", err);
   });
+
 }
 
-function showXpPopup(xpGain, level, totalXp) {
+function showXpPopup(xpGain, level, totalXp, extraText) {
   const popup = document.getElementById("xp-popup");
   const main = document.getElementById("xp-popup-message-main");
   const sub = document.getElementById("xp-popup-message-sub");
@@ -1401,11 +1414,14 @@ function showXpPopup(xpGain, level, totalXp) {
   const safeXp = typeof xpGain === "number" ? xpGain : 0;
   main.textContent = `Ganaste ${safeXp} XP en esta pausa.`;
 
+  let parts = [];
   if (typeof level === "number" && typeof totalXp === "number") {
-    sub.textContent = `Nivel actual: ${level} · ${totalXp} XP total`;
-  } else {
-    sub.textContent = "";
+    parts.push(`Nivel actual: ${level} · ${totalXp} XP total`);
   }
+  if (extraText) {
+    parts.push(extraText);
+  }
+  sub.textContent = parts.join(" · ");
 
   popup.classList.add("visible");
   popup.setAttribute("aria-hidden", "false");
@@ -1432,15 +1448,16 @@ function showXpPopup(xpGain, level, totalXp) {
  * Handles clicks on the 'Skip' button.
  */
 breakSkipBtn.addEventListener("click", () => {
-  // Si estamos en el último ejercicio, el botón dice "¡Terminar!"
+  // Si estamos en el último ejercicio, el botón suele decir "¡Terminar!"
   if (currentExerciseIndex >= guidedBreakExercises.length - 1) {
-    // Consideramos que NO completó todos los holds al 100%
-    endBreakSequence(false);
+    // ✅ Cuenta como pausa completada
+    endBreakSequence(true);
   } else {
-    // Saltar al siguiente ejercicio, pero cuenta como ejercicio "pasado" en el juego
+    // Salta al siguiente ejercicio, pero mantiene la pausa activa
     completeExercise();
   }
 });
+
 
 
 /**

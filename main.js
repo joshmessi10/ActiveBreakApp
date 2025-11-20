@@ -425,6 +425,55 @@ function initDatabase() {
                           }
                         }
                       );
+                      // Catálogo de challenges (reto = logro + recompensa)
+                      db.run(
+                        `
+                        CREATE TABLE IF NOT EXISTS game_challenges (
+                          id INTEGER PRIMARY KEY AUTOINCREMENT,
+                          code TEXT UNIQUE NOT NULL,
+                          name TEXT NOT NULL,
+                          description TEXT,
+                          period_type TEXT NOT NULL,    -- 'daily' | 'weekly' | 'monthly'
+                          target_type TEXT NOT NULL,    -- 'breaks_completed' | 'xp_gain'
+                          target_value INTEGER NOT NULL,
+                          reward_xp INTEGER NOT NULL DEFAULT 0,    -- XP extra al completar
+                          is_active INTEGER NOT NULL DEFAULT 1,
+                          created_at INTEGER NOT NULL
+                        )
+                      `,
+                        (err) => {
+                          if (err) {
+                            console.error("❌ game_challenges table creation error:", err);
+                          } else {
+                            console.log("✅ game_challenges table ready");
+                          }
+                        }
+                      );
+
+                      // Progreso de challenges por usuario y período
+                      db.run(
+                        `
+                        CREATE TABLE IF NOT EXISTS user_challenge_progress (
+                          id INTEGER PRIMARY KEY AUTOINCREMENT,
+                          user_id INTEGER NOT NULL,
+                          challenge_id INTEGER NOT NULL,
+                          period_key TEXT NOT NULL,       -- 'YYYY-MM-DD', 'YYYY-Www', etc.
+                          progress_value INTEGER NOT NULL DEFAULT 0,
+                          completed INTEGER NOT NULL DEFAULT 0,
+                          completed_at INTEGER,
+                          UNIQUE (user_id, challenge_id, period_key),
+                          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                          FOREIGN KEY (challenge_id) REFERENCES game_challenges(id) ON DELETE CASCADE
+                        )
+                      `,
+                        (err) => {
+                          if (err) {
+                            console.error("❌ user_challenge_progress table creation error:", err);
+                          } else {
+                            console.log("✅ user_challenge_progress table ready");
+                          }
+                        }
+                      );
                     }
                   );
                 }
@@ -434,7 +483,238 @@ function initDatabase() {
         }
       );
     });
+  seedChallenges();
   });
+}
+
+async function updateChallengesOnBreak(db, userId, cleanPayload, xpBaseGain) {
+  const endedAt = cleanPayload.endedAt;
+  const dayKey = getDayKey(endedAt);
+  const weekKey = getWeekKey(endedAt);
+  const monthKey = getMonthKey(endedAt);
+
+  const periodInfoByType = {
+    daily: dayKey,
+    weekly: weekKey,
+    monthly: monthKey,
+  };
+
+  // Por ahora usamos retos diarios (y si luego metes semanales, ya está listo)
+  const applicablePeriodTypes = ["daily", "weekly"];
+
+  const completedChallenges = [];
+  let totalBonusXp = 0;
+
+  for (const periodType of applicablePeriodTypes) {
+    const periodKey = periodInfoByType[periodType];
+
+    // 1) Traer challenges activos de ese tipo
+    const challenges = await new Promise((resolve) => {
+      db.all(
+        `
+        SELECT * FROM game_challenges
+        WHERE is_active = 1 AND period_type = ?
+      `,
+        [periodType],
+        (err, rows) => {
+          if (err) {
+            console.error("❌ Error fetching game_challenges:", err);
+            resolve([]);
+            return;
+          }
+          resolve(rows || []);
+        }
+      );
+    });
+
+    if (!challenges.length) continue;
+
+    // 2) Para cada challenge, calcular cuánto sumar
+    for (const ch of challenges) {
+      let increment = 0;
+
+      if (cleanPayload.completed) {
+        if (ch.target_type === "breaks_completed") {
+          // 🔴 ESTE es el reto “he hecho una pausa activa” → suma 1 por pausa completada
+          increment = 1;
+        } else if (ch.target_type === "xp_gain") {
+          increment = xpBaseGain;
+        }
+      }
+
+      if (increment <= 0) continue;
+
+      // 3) Leer progreso actual de ese challenge para este usuario y este periodo
+      const progressRow = await new Promise((resolve) => {
+        db.get(
+          `
+          SELECT * FROM user_challenge_progress
+          WHERE user_id = ? AND challenge_id = ? AND period_key = ?
+        `,
+          [userId, ch.id, periodKey],
+          (err, row) => {
+            if (err) {
+              console.error(
+                "❌ Error fetching user_challenge_progress:",
+                err
+              );
+              resolve(null);
+              return;
+            }
+            resolve(row);
+          }
+        );
+      });
+
+      const now = Date.now();
+      const target = ch.target_value || 0;
+
+      let newProgressValue;
+      let justCompleted = false;
+
+      if (!progressRow) {
+        // 4a) No había progreso → crear fila nueva
+        newProgressValue = increment;
+        const completed = newProgressValue >= target ? 1 : 0;
+        justCompleted = completed === 1;
+
+        await new Promise((resolve) => {
+          db.run(
+            `
+            INSERT INTO user_challenge_progress
+              (user_id, challenge_id, period_key, progress_value, completed, completed_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `,
+            [
+              userId,
+              ch.id,
+              periodKey,
+              newProgressValue,
+              completed,
+              completed ? now : null,
+            ],
+            (err) => {
+              if (err) {
+                console.error(
+                  "❌ Error inserting user_challenge_progress:",
+                  err
+                );
+              } else {
+                console.log(
+                  "✅ Challenge progress created",
+                  ch.code,
+                  "user:",
+                  userId,
+                  "progress:",
+                  newProgressValue,
+                  "of",
+                  target
+                );
+              }
+              resolve();
+            }
+          );
+        });
+      } else {
+        // 4b) Ya había progreso → actualizar
+        newProgressValue = (progressRow.progress_value || 0) + increment;
+        const alreadyCompleted = progressRow.completed === 1;
+        const willComplete = newProgressValue >= target ? 1 : 0;
+        justCompleted = !alreadyCompleted && willComplete === 1;
+
+        await new Promise((resolve) => {
+          db.run(
+            `
+            UPDATE user_challenge_progress
+            SET progress_value = ?, completed = ?, completed_at = COALESCE(completed_at, ?)
+            WHERE id = ?
+          `,
+            [
+              newProgressValue,
+              willComplete,
+              willComplete ? now : null,
+              progressRow.id,
+            ],
+            (err) => {
+              if (err) {
+                console.error(
+                  "❌ Error updating user_challenge_progress:",
+                  err
+                );
+              } else {
+                console.log(
+                  "✅ Challenge progress updated",
+                  ch.code,
+                  "user:",
+                  userId,
+                  "progress:",
+                  newProgressValue,
+                  "of",
+                  target
+                );
+              }
+              resolve();
+            }
+          );
+        });
+      }
+
+      // 5) Si justo se completó, acumulamos info y XP bonus
+      if (justCompleted) {
+        completedChallenges.push({
+          id: ch.id,
+          code: ch.code,
+          name: ch.name,
+          description: ch.description,
+          periodType,
+          periodKey,
+          rewardXp: ch.reward_xp || 0,
+        });
+
+        totalBonusXp += ch.reward_xp || 0;
+        console.log(
+          "🎯 Challenge completed:",
+          ch.code,
+          "user:",
+          userId,
+          "bonusXp:",
+          ch.reward_xp || 0
+        );
+      }
+    }
+  }
+
+  return { completedChallenges, bonusXp: totalBonusXp };
+}
+
+
+
+function seedChallenges() {
+  const now = Date.now();
+
+  // Challenge base: "Completa 3 pausas hoy"
+  db.run(
+    `
+    INSERT OR IGNORE INTO game_challenges
+      (code, name, description, period_type, target_type, target_value, reward_xp, is_active, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
+  `,
+    [
+      "DAILY_3_BREAKS",
+      "3 pausas hoy",
+      "Completa al menos 3 pausas activas en el día.",
+      "daily",
+      "breaks_completed",
+      3,
+      50, // 50 XP extra al completar el reto
+      now,
+    ],
+    (err) => {
+      if (err) {
+        console.error("❌ Error seeding DAILY_3_BREAKS challenge:", err);
+      }
+    }
+  );
 }
 
 // IPC Handler: Register new user
@@ -1343,8 +1623,23 @@ ipcMain.handle("game:breakCompleted", async (event, userId, payload) => {
       endedAt,
     };
 
-    // 🧮 XP ganado en esta pausa (antes lo llamábamos "score")
-    const xpGain = calculateBreakGameScore(cleanPayload);
+    // XP base de la pausa
+    const xpBase = calculateBreakGameScore(cleanPayload);
+
+    // Actualizar challenges y ver si se completó alguno
+    let challengeInfo = { completedChallenges: [], bonusXp: 0 };
+    try {
+      challengeInfo = await updateChallengesOnBreak(
+        db,
+        userId,
+        cleanPayload,
+        xpBase
+      );
+    } catch (chErr) {
+      console.error("❌ Error updating challenges on break:", chErr);
+    }
+
+    const xpTotalGain = xpBase + (challengeInfo.bonusXp || 0);
 
     return new Promise((resolve) => {
       db.run(
@@ -1357,7 +1652,7 @@ ipcMain.handle("game:breakCompleted", async (event, userId, payload) => {
           userId,
           cleanPayload.startedAt,
           cleanPayload.endedAt,
-          xpGain, // 👈 almacenamos XP de esta pausa
+          xpBase, // guardamos XP base de esta pausa
           cleanPayload.completedExercisesCount,
           cleanPayload.triggerReason,
           cleanPayload.qualityFactor,
@@ -1374,38 +1669,33 @@ ipcMain.handle("game:breakCompleted", async (event, userId, payload) => {
             return;
           }
 
+          let progress = null;
           try {
-            // XP del período (día/semana/mes) – sigue usando game_scores.total_score
+            // XP del período (daily/weekly/monthly) y XP total usan XP total ganada (pausa + retos)
             await updateGameScoreAggregates(
               db,
               userId,
-              xpGain,
+              xpTotalGain,
               cleanPayload.endedAt
             );
-          } catch (aggErr) {
-            console.error("❌ Error updating score aggregates:", aggErr);
-          }
 
-          let progress = null;
-          try {
-            // 🎯 Actualizar XP total y nivel global del usuario
-            progress = await updateUserProgressXp(db, userId, xpGain);
-          } catch (progressErr) {
+            progress = await updateUserProgressXp(db, userId, xpTotalGain);
+          } catch (aggErr) {
             console.error(
-              "❌ Error updating user progress XP:",
-              progressErr
+              "❌ Error updating scores / user progress XP:",
+              aggErr
             );
           }
 
           resolve({
             success: true,
-            // XP ganada en esta pausa
-            xpGain,
-            // mantenemos scoreBreak por compatibilidad, pero es XP
-            scoreBreak: xpGain,
-            // progreso global (puede ser null si hubo error)
+            xpGain: xpTotalGain,
+            scoreBreak: xpTotalGain, // compat
+            baseXp: xpBase,
+            bonusXp: challengeInfo.bonusXp || 0,
             totalXp: progress ? progress.totalXp : null,
             level: progress ? progress.level : null,
+            completedChallenges: challengeInfo.completedChallenges,
           });
         }
       );
@@ -1418,6 +1708,8 @@ ipcMain.handle("game:breakCompleted", async (event, userId, payload) => {
     };
   }
 });
+
+
 
 
 ipcMain.handle("game:getLeaderboard", async (event, args) => {
@@ -1544,6 +1836,68 @@ ipcMain.handle("user:getProgress", async (event, userId) => {
     };
   }
 });
+
+ipcMain.handle("user:getActiveChallenges", async (event, userId, periodType) => {
+  try {
+    const pt =
+      ["daily", "weekly", "monthly"].includes(periodType) && periodType
+        ? periodType
+        : "daily";
+    const periodKey = getDefaultPeriodKey(pt);
+
+    return new Promise((resolve) => {
+      db.all(
+        `
+        SELECT 
+          c.id,
+          c.code,
+          c.name,
+          c.description,
+          c.period_type,
+          c.target_type,
+          c.target_value,
+          c.reward_xp,
+          ucp.progress_value,
+          ucp.completed,
+          ucp.completed_at
+        FROM game_challenges c
+        LEFT JOIN user_challenge_progress ucp
+          ON ucp.challenge_id = c.id
+         AND ucp.user_id = ?
+         AND ucp.period_key = ?
+        WHERE c.is_active = 1 AND c.period_type = ?
+      `,
+        [userId, periodKey, pt],
+        (err, rows) => {
+          if (err) {
+            console.error("❌ Error fetching active challenges:", err);
+            resolve({
+              success: false,
+              message: "Error al obtener retos activos.",
+              challenges: [],
+            });
+            return;
+          }
+
+          resolve({
+            success: true,
+            periodType: pt,
+            periodKey,
+            challenges: rows || [],
+          });
+        }
+      );
+    });
+  } catch (e) {
+    console.error("❌ Exception in user:getActiveChallenges:", e);
+    return {
+      success: false,
+      message: "Error inesperado al obtener retos.",
+      challenges: [],
+    };
+  }
+});
+
 
 
 app.whenReady().then(async () => {

@@ -139,7 +139,8 @@
       }
 
       .leaderboard-table td:nth-child(4),
-      .leaderboard-table td:nth-child(5) {
+      .leaderboard-table td:nth-child(5),
+      .leaderboard-table td:nth-child(6) {
         text-align: right;
         white-space: nowrap;
       }
@@ -153,27 +154,28 @@
         font-size: 0.85rem;
       }
 
+      /* Leyenda de niveles */
       .xp-level-legend {
         margin-top: 1.5rem;
         font-size: 0.85rem;
-        }
+      }
 
-        .xp-level-legend h3 {
+      .xp-level-legend h3 {
         margin: 0 0 0.5rem;
         font-size: 0.9rem;
         color: #111827;
-        }
+      }
 
-        .xp-level-table {
+      .xp-level-table {
         border-collapse: collapse;
-        }
+      }
 
-        .xp-level-table td {
+      .xp-level-table td {
         padding: 0.2rem 0.5rem 0.2rem 0;
         vertical-align: middle;
-        }
+      }
 
-        .xp-level-badge {
+      .xp-level-badge {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -181,38 +183,152 @@
         border-radius: 999px;
         font-size: 0.75rem;
         font-weight: 600;
-        }
+      }
 
-        .xp-level-badge.level-1 {
+      .xp-level-badge.level-1 {
         background: #e0f2fe;
         color: #0369a1;
-        }
+      }
 
-        .xp-level-badge.level-2 {
+      .xp-level-badge.level-2 {
         background: #dcfce7;
         color: #15803d;
-        }
+      }
 
-        .xp-level-badge.level-3 {
+      .xp-level-badge.level-3 {
         background: #fef3c7;
         color: #b45309;
-        }
+      }
 
-        .xp-level-badge.level-4 {
+      .xp-level-badge.level-4 {
         background: #fee2e2;
         color: #b91c1c;
-        }
+      }
 
-        .xp-level-badge.level-5 {
+      .xp-level-badge.level-5 {
         background: #ede9fe;
         color: #5b21b6;
-        }
+      }
 
-        .xp-level-badge.level-6 {
+      .xp-level-badge.level-6 {
         background: #f9fafb;
         color: #111827;
-        }
+      }
 
+      /* Sección de retos */
+      .challenges-section {
+        margin-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 1.25rem;
+      }
+
+      .challenges-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .challenges-header h3 {
+        margin: 0;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .challenges-header small {
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+
+      .challenges-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .challenge-card {
+        border-radius: 10px;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-size: 0.85rem;
+      }
+
+      .challenge-card.completed {
+        border-color: #22c55e;
+        background: #ecfdf3;
+      }
+
+      .challenge-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .challenge-title-row strong {
+        font-size: 0.9rem;
+      }
+
+      .challenge-chip {
+        font-size: 0.75rem;
+        border-radius: 999px;
+        padding: 0.1rem 0.55rem;
+        background: #eef2ff;
+        color: #4338ca;
+        white-space: nowrap;
+      }
+
+      .challenge-chip.completed {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .challenge-desc {
+        color: #4b5563;
+      }
+
+      .challenge-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+
+      .challenge-progress-bar {
+        position: relative;
+        width: 100%;
+        height: 6px;
+        border-radius: 999px;
+        background: #e5e7eb;
+        overflow: hidden;
+      }
+
+      .challenge-progress-fill {
+        position: absolute;
+        inset: 0;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(to right, #4f46e5, #22c55e);
+        transition: width 0.2s ease;
+      }
+
+      .challenges-empty {
+        font-size: 0.85rem;
+        color: #6b7280;
+        font-style: italic;
+      }
+
+      #challengesError {
+        margin-bottom: 0.5rem;
+      }
 
       @media (max-width: 640px) {
         .leaderboard-card {
@@ -226,6 +342,12 @@
 
         .leaderboard-controls {
           justify-content: flex-start;
+        }
+
+        .challenge-meta {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.25rem;
         }
       }
     </style>
@@ -301,67 +423,92 @@
         <div class="table-wrapper">
           <table class="leaderboard-table">
             <thead>
-                <tr>
+              <tr>
                 <th>#</th>
                 <th>Usuario</th>
                 <th>Organización</th>
                 <th>Nivel</th>
                 <th>XP (período)</th>
                 <th>Pausas</th>
-                </tr>
+              </tr>
             </thead>
             <tbody id="leaderboardBody">
               <tr>
-                <td colspan="5" style="text-align: center">
+                <td colspan="6" style="text-align: center">
                   Cargando...
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <!-- Leyenda de niveles -->
         <div class="xp-level-legend">
-            <h3>Rangos de niveles</h3>
-            <table class="xp-level-table">
-                <tbody>
-                <tr>
-                    <td>
-                    <span class="xp-level-badge level-1">Nivel 1</span>
-                    </td>
-                    <td>0 – 99 XP</td>
-                </tr>
-                <tr>
-                    <td>
-                    <span class="xp-level-badge level-2">Nivel 2</span>
-                    </td>
-                    <td>100 – 399 XP</td>
-                </tr>
-                <tr>
-                    <td>
-                    <span class="xp-level-badge level-3">Nivel 3</span>
-                    </td>
-                    <td>400 – 899 XP</td>
-                </tr>
-                <tr>
-                    <td>
-                    <span class="xp-level-badge level-4">Nivel 4</span>
-                    </td>
-                    <td>900 – 1 599 XP</td>
-                </tr>
-                <tr>
-                    <td>
-                    <span class="xp-level-badge level-5">Nivel 5</span>
-                    </td>
-                    <td>1 600 – 2 499 XP</td>
-                </tr>
-                <tr>
-                    <td>
-                    <span class="xp-level-badge level-6">Nivel 6+</span>
-                    </td>
-                    <td>2 500+ XP</td>
-                </tr>
-                </tbody>
-            </table>
-</div>
+          <h3>Rangos de niveles</h3>
+          <table class="xp-level-table">
+            <tbody>
+              <tr>
+                <td>
+                  <span class="xp-level-badge level-1">Nivel 1</span>
+                </td>
+                <td>0 – 99 XP</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="xp-level-badge level-2">Nivel 2</span>
+                </td>
+                <td>100 – 399 XP</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="xp-level-badge level-3">Nivel 3</span>
+                </td>
+                <td>400 – 899 XP</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="xp-level-badge level-4">Nivel 4</span>
+                </td>
+                <td>900 – 1 599 XP</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="xp-level-badge level-5">Nivel 5</span>
+                </td>
+                <td>1 600 – 2 499 XP</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="xp-level-badge level-6">Nivel 6+</span>
+                </td>
+                <td>2 500+ XP</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mis retos -->
+        <section class="challenges-section">
+          <div class="challenges-header">
+            <h3>
+              <i data-feather="flag"></i>
+              Mis retos
+            </h3>
+            <small id="challengesSubtitle"></small>
+          </div>
+
+          <div
+            id="challengesError"
+            class="error-message"
+            style="display: none"
+          >
+            Error al cargar los retos.
+          </div>
+
+          <div id="challengesList" class="challenges-list">
+            <p class="challenges-empty">Cargando retos...</p>
+          </div>
+        </section>
       </section>
     </main>
 

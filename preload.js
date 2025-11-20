@@ -35,4 +35,7 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("game:breakCompleted", userId, payload),
   getLeaderboard: (args) => ipcRenderer.invoke("game:getLeaderboard", args),
   getUserProgress: (userId) => ipcRenderer.invoke("user:getProgress", userId),
+
+  getActiveChallenges: (userId, periodType) =>
+  ipcRenderer.invoke("user:getActiveChallenges", userId, periodType),
 });
