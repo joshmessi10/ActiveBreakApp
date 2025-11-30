@@ -1,8 +1,11 @@
-# ActiveBreakApp
+# Active Break
 
 **Real-Time Posture Detection and Active Break Reminders for Desktop**
 
-ActiveBreakApp is a cross-platform Electron desktop application that helps users maintain healthy posture during computer work. Using AI-powered computer vision (MediaPipe Pose), the app monitors your sitting posture in real-time and provides intelligent feedback through desktop notifications, statistics tracking, and actionable insights.
+ActiveBreak is a cross-platform Electron desktop application that helps users maintain healthy posture and stay active during computer work. Powered by TensorFlow.js and the MoveNet Lightning model, it performs real-time posture analysis, active break management, challenge progression, and event tracking — all executed locally for full privacy. The system includes break timers, guided micro-exercises, reward progression, persistent per-user settings, and a complete history of posture, alerts, breaks, and challenge achievements.
+
+The application includes a built-in rewards and challenges system that tracks the user’s posture consistency, break compliance, and daily activity. Challenge progress is computed from posture_events and break_events, and users can review their active challenges, historical completions, and progress percentage for each period.
+
 
 ---
 
@@ -14,6 +17,8 @@ ActiveBreakApp is a cross-platform Electron desktop application that helps users
 - SQLite3 database with bcrypt password hashing (10 salt rounds)
 - Admin dashboard for user management
 - Session-based authentication with route protection
+- The authentication system includes a persistent session layer and an AuthGuard that validates every IPC request based on user role and active session. All privileged routes (stats, events, settings, rewards, breaks) are protected, and the renderer has no direct database access other than through the sanitized API exposed in preload.js.
+
 
 ### 🎥 **Real-Time Posture Detection**
 
@@ -24,6 +29,11 @@ ActiveBreakApp is a cross-platform Electron desktop application that helps users
   - Shoulder symmetry (10% tilt tolerance)
 - Visual skeleton overlay (17 keypoints)
 - Intelligent feedback with specific correction messages
+- Internally, the posture engine stabilizes predictions by consolidating classification once per second, applying confidence filters to each of the 17 keypoints, and requiring consecutive frames of consistent misalignment before triggering a state change.
+- Notifications use a cooldown system that prevents repeated alerts during sustained bad posture periods, and posture_events are logged once per second to enable precise analytics and challenge tracking.
+
+
+
 
 ### 📊 **Comprehensive Analytics**
 
@@ -33,6 +43,8 @@ ActiveBreakApp is a cross-platform Electron desktop application that helps users
 - Date-range filtering for historical data analysis
 - Trend analysis with period-over-period comparison
 - CSV export functionality
+- Analytics are powered by four event streams stored in the database: posture_events, alert_events, break_events, and challenge_events. Each event is timestamped and normalized to daily, weekly, and monthly aggregates, enabling comparative analytics across multiple periods. The engine supports period-type queries (day/week/month) and returns both absolute metrics and deltas for trend analysis.
+
 
 ### 🔔 **Smart Notifications & Break Reminders**
 
@@ -41,6 +53,10 @@ ActiveBreakApp is a cross-platform Electron desktop application that helps users
 - Automatic break reminders with countdown timer (5-120 minutes)
 - Random stretching exercise suggestions
 - Spam prevention logic
+- The break reminder system includes a dedicated timer that tracks the remaining time until the next active break. When triggered, the app displays a guided micro-exercise suggestion and records a break_event for analytics and reward progression. Break reminders include their own cooldown to avoid repeated prompts when the user is switching windows or temporarily inactive.
+ 
+ActiveBreak includes a full active-break module that schedules guided micro-exercises, tracks the duration and completion of each break, and records break events for progress analytics. The system manages countdowns, exercise suggestions, cooldown periods, and streak preservation. These breaks contribute directly to the challenge and reward progression system.
+
 
 ### ⚙️ **Customizable Settings**
 
@@ -50,6 +66,8 @@ ActiveBreakApp is a cross-platform Electron desktop application that helps users
 - Persistent settings across sessions
 - Accessible to both admin and client users
 - Each user manages their own personal settings
+- Each setting is applied immediately to the detection engine without restarting the application. Sensitivity maps directly to the minimum keypoint confidence for MoveNet, and alert/break thresholds update the internal timers and cooldown logic in real time.
+
 
 ### 🎨 **Professional UI/UX**
 
@@ -206,6 +224,7 @@ For detailed technical documentation, see:
 - **Date Filtering**: Analyze specific time ranges
 - **Trend Analysis**: Period-over-period comparison with percentage changes
 - **CSV Export**: Download historical data for external analysis
+- **Rewards System**: 
 
 ### Settings Configuration
 
@@ -221,31 +240,40 @@ For detailed technical documentation, see:
 
 ### Authentication Flow
 
-**Admin Login**
+**Login**
 
-<img width="640" alt="Admin Login" src="https://github.com/user-attachments/assets/63916f27-5460-4090-82c3-9a8d4efef5bd" />
+<img width="1218" height="762" alt="Login" src="https://github.com/user-attachments/assets/cd995e5e-4b58-4885-82ba-6f9182d5951f" />
 
-**Admin Dashboard**
-
-<img width="640" alt="Admin Dashboard" src="https://github.com/user-attachments/assets/f51a04d1-3e48-4c04-a091-b02a3175aad3" />
-
-**Client Login**
-
-<img width="640" alt="Client Login" src="https://github.com/user-attachments/assets/33cb3901-c60e-40c8-8672-e3dc80d9c6f3" />
 
 ### Core Application
 
 **Posture Detection**
 
-<img width="640" alt="Posture Detection" src="https://github.com/user-attachments/assets/e11347a8-c9bb-4eb8-9517-b667e33eeb60" />
+<img width="1248" height="916" alt="GoodPosture" src="https://github.com/user-attachments/assets/4a060916-d655-4255-9756-0303b6b49463" />
 
-**Statistics Modal with Charts**
+<img width="1248" height="896" alt="BadPosture" src="https://github.com/user-attachments/assets/7cfca3c4-b373-4b5b-8b12-2cd63e273af9" />
 
-<img width="640" alt="Statistics" src="https://github.com/user-attachments/assets/2ace1ca2-d70f-486e-86c2-39aa6329cd61" />
+<img width="1243" height="902" alt="BadPosture2" src="https://github.com/user-attachments/assets/fe936dd2-11d0-4864-82ad-30fd88b5bd65" />
+
+**Active Break**
+
+<img width="1217" height="906" alt="ActiveBreak" src="https://github.com/user-attachments/assets/b110b45c-82cc-43df-b7c9-e562682cfa8f" />
+
+
+**Statistics**
+
+<img width="1165" height="735" alt="Stats" src="https://github.com/user-attachments/assets/67cbc6ce-9226-46ad-98f7-44a598831b73" />
+
+
+**Rewards System**
+
+<img width="1225" height="902" alt="Rewards" src="https://github.com/user-attachments/assets/4532984b-94a8-4e08-a475-78a04eef6d91" />
+
 
 **Settings Panel**
 
-<img width="640" alt="Settings" src="https://github.com/user-attachments/assets/b82b930b-ed71-4daf-a926-abb8701b7cef" />
+<img width="1257" height="942" alt="Config" src="https://github.com/user-attachments/assets/a4a4885b-9831-43f6-8c96-6dde73ed9cf1" />
+
 
 ---
 
@@ -266,6 +294,9 @@ Contributions are welcome! Please follow these guidelines:
 ## 📄 License
 
 This project is open-source and available under the MIT License.
+
+Josh Sebastián López Murcia
+Franklin Julián González Pérez
 
 ---
 
@@ -293,7 +324,6 @@ This project is open-source and available under the MIT License.
 - [ ] Posture calibration for different body types
 - [ ] Weekly/monthly progress reports via email
 - [ ] Integration with fitness trackers
-- [ ] Gamification (achievements, streaks, challenges)
 
 ---
 
